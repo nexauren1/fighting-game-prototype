@@ -311,7 +311,6 @@ func _setting_row(parent: Control, y: float, key: String, value: String) -> Cont
 	row.size = Vector2(1000, 42)
 	row.add_child(_label(key, Vector2.ZERO, Vector2(160, 24), 11, TEXT_MUTED))
 	row.add_child(_label(value, Vector2(180, -2), Vector2(700, 30), 15, TEXT_MAIN))
-	parent.add_child(row)
 	return row
 
 func _card(pos: Vector2, size: Vector2, color: Color) -> Panel:
