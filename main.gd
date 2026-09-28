@@ -92,7 +92,7 @@ func _build_header() -> void:
 	add_child(step)
 
 	var version := Label.new()
-	version.text = "PROTOTYPE  •  0.2"
+	version.text = "PROTOTYPE  •  0.3"
 	version.position = Vector2(get_viewport_rect().size.x - 245, 58)
 	version.size = Vector2(185, 26)
 	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -141,7 +141,7 @@ func _build_home() -> void:
 
 func _build_character_select() -> void:
 	add_child(_label("CHOOSE YOUR HUNTER", Vector2(72, 140), Vector2(600, 54), 38, TEXT_MAIN))
-	add_child(_label("The slots are ready. Final 3D characters come next.", Vector2(74, 194), Vector2(700, 30), 15, TEXT_MUTED))
+	add_child(_label("3D previews are live. Final Meshy characters come next.", Vector2(74, 194), Vector2(700, 30), 15, TEXT_MUTED))
 
 	var left := _character_card(72, "HUNTER SLOT 01", "PHANTOM", CYAN, 0)
 	var right := _character_card(664, "HUNTER SLOT 02", "VANGUARD", PINK, 1)
