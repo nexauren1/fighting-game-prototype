@@ -290,7 +290,7 @@ func _build_setup() -> void:
 	add_child(back)
 
 	var fight := _button("ENTER FIGHT  →", Vector2(878, 632), Vector2(260, 56), PURPLE)
-	fight.pressed.connect(func(): _update_status("Combat scene is the next milestone."))
+	fight.pressed.connect(_enter_fight)
 	add_child(fight)
 
 func _add_3d_preview(parent: Control, accent: Color) -> void:
@@ -333,6 +333,11 @@ func _setup_card(pos: Vector2, slot: String, fighter: String, accent: Color) -> 
 	c.add_child(_label("3D MODEL PENDING", Vector2(24, 94), Vector2(250, 24), 12, accent))
 	c.add_child(_label("Animation rig • moves • combat data", Vector2(24, 130), Vector2(350, 26), 13, TEXT_MUTED))
 	return c
+
+func _enter_fight() -> void:
+	get_tree().set_meta("p1_hunter", selected_hunter)
+	get_tree().set_meta("selected_arena", selected_arena)
+	get_tree().change_scene_to_file("res://combat.tscn")
 
 func _build_settings() -> void:
 	add_child(_label("SETTINGS", Vector2(72, 140), Vector2(400, 54), 38, TEXT_MAIN))
