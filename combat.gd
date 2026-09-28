@@ -6,7 +6,6 @@ const BG := Color("#050612")
 const CYAN := Color("#58E7FF")
 const PINK := Color("#FF5EC4")
 const PURPLE := Color("#B86CFF")
-const GREEN := Color("#72F7C2")
 const TEXT := Color("#F5F7FF")
 const MUTED := Color("#8B94B7")
 
@@ -24,17 +23,15 @@ var timer_label: Label
 var p1_info: Label
 var p2_info: Label
 var announce_label: Label
-var footer_label: Label
+
 var p1_style := 0
 var p2_style := 1
-var p1_weapon := 0
-var p2_weapon := 1
 
 func _ready() -> void:
 	_build_environment()
 	_build_fighters()
 	_build_ui()
-	_show_announce("READY", 1.2)
+	_show_announce("READY", 1.0)
 
 func _process(delta: float) -> void:
 	if not round_over:
@@ -46,8 +43,7 @@ func _process(delta: float) -> void:
 			_end_round_by_time()
 	_update_camera(delta)
 	_update_ui()
-	if announce_timer > 0.0:
-		announce_timer = max(0.0, announce_timer - delta)
+	announce_timer = max(0.0, announce_timer - delta)
 
 func _input(event: InputEvent) -> void:
 	if not event is InputEventKey:
@@ -59,14 +55,11 @@ func _input(event: InputEvent) -> void:
 	match key_event.keycode:
 		KEY_ESCAPE:
 			get_tree().change_scene_to_file("res://main.tscn")
-		KEY_ENTER, KEY_KP_ENTER:
-			if round_over:
-				_restart_round()
-		KEY_R:
+		KEY_ENTER, KEY_KP_ENTER, KEY_R:
 			if round_over:
 				_restart_round()
 
-	# P1 actions
+	# Player 1
 	match key_event.keycode:
 		KEY_F:
 			player_one.start_attack(0)
@@ -82,12 +75,8 @@ func _input(event: InputEvent) -> void:
 			_set_player_style(player_one, 1, true)
 		KEY_3:
 			_set_player_style(player_one, 2, true)
-		KEY_4:
-			p1_weapon = (p1_weapon + 1) % CombatFighter.WEAPON_NAMES.size()
-			player_one.set_weapon(p1_weapon)
-			_show_announce("P1: " + player_one.weapon_name(), 0.55)
 
-	# P2 actions
+	# Player 2
 	match key_event.keycode:
 		KEY_J:
 			player_two.start_attack(0)
@@ -103,10 +92,6 @@ func _input(event: InputEvent) -> void:
 			_set_player_style(player_two, 1, false)
 		KEY_9:
 			_set_player_style(player_two, 2, false)
-		KEY_0:
-			p2_weapon = (p2_weapon + 1) % CombatFighter.WEAPON_NAMES.size()
-			player_two.set_weapon(p2_weapon)
-			_show_announce("P2: " + player_two.weapon_name(), 0.55)
 
 func _build_environment() -> void:
 	var world := WorldEnvironment.new()
@@ -140,7 +125,6 @@ func _build_environment() -> void:
 		_add_box(Vector3(x, h * 0.5 - 0.15, z), Vector3(1.25, h, 0.9), Color("#090C19"), Vector3.ZERO)
 		_add_box(Vector3(x, 0.15, z + (0.48 if z > 0 else -0.48)), Vector3(0.9, 0.06, 0.05), CYAN if i % 2 == 0 else PINK, Vector3.ZERO)
 
-	# skyline bars behind the fighters
 	for i in range(9):
 		var x2 := -9.0 + float(i) * 2.25
 		var h2 := 3.0 + float((i * 5) % 6) * 0.5
@@ -179,51 +163,47 @@ func _build_fighters() -> void:
 		p2_name = "PHANTOM"
 
 	player_one = FIGHTER_SCENE.instantiate()
-	player_one.setup(p1_name, CYAN, p1_style, p1_weapon)
+	player_one.setup(p1_name, CYAN, p1_style)
 	player_one.position = Vector3(-3.2, 0, 0)
 	player_one.facing = 1.0
 	add_child(player_one)
 
 	player_two = FIGHTER_SCENE.instantiate()
-	player_two.setup(p2_name, PINK, p2_style, p2_weapon)
+	player_two.setup(p2_name, PINK, p2_style)
 	player_two.position = Vector3(3.2, 0, 0)
 	player_two.facing = -1.0
 	add_child(player_two)
-
-	_set_player_style(player_one, p1_style, false)
-	_set_player_style(player_two, p2_style, false)
 
 func _process_input() -> void:
 	if round_over:
 		return
 
-	player_one.is_blocking = Input.is_key_pressed(KEY_R) and not player_one.is_attacking()
-	player_two.is_blocking = Input.is_key_pressed(KEY_I) and not player_two.is_attacking()
+	player_one.is_blocking = Input.is_physical_key_pressed(KEY_R) and not player_one.is_attacking()
+	player_two.is_blocking = Input.is_physical_key_pressed(KEY_I) and not player_two.is_attacking()
 
 	var p1_dir := 0.0
-	if Input.is_key_pressed(KEY_A):
+	if Input.is_physical_key_pressed(KEY_A):
 		p1_dir -= 1.0
-	if Input.is_key_pressed(KEY_D):
+	if Input.is_physical_key_pressed(KEY_D):
 		p1_dir += 1.0
 	_move_player(player_one, p1_dir)
 
 	var p2_dir := 0.0
-	if Input.is_key_pressed(KEY_LEFT):
+	if Input.is_physical_key_pressed(KEY_LEFT):
 		p2_dir -= 1.0
-	if Input.is_key_pressed(KEY_RIGHT):
+	if Input.is_physical_key_pressed(KEY_RIGHT):
 		p2_dir += 1.0
 	_move_player(player_two, p2_dir)
 
-	if Input.is_key_pressed(KEY_W):
+	if Input.is_physical_key_pressed(KEY_W):
 		player_one.jump()
-	if Input.is_key_pressed(KEY_UP):
+	if Input.is_physical_key_pressed(KEY_UP):
 		player_two.jump()
 
 func _move_player(fighter: CombatFighter, direction: float) -> void:
 	if direction == 0.0 or fighter.ko or fighter.stun_timer > 0.0 or fighter.is_attacking():
 		return
-	var style_speed := [4.4, 3.8, 5.0][fighter.style_index]
-	fighter.position.x += direction * style_speed * get_process_delta_time()
+	fighter.position.x += direction * fighter.style_speed() * get_process_delta_time()
 	fighter.position.x = clampf(fighter.position.x, -8.3, 8.3)
 	fighter.facing = sign(direction)
 
@@ -248,10 +228,11 @@ func _resolve_single_attack(attacker: CombatFighter, target: CombatFighter) -> v
 	var distance := absf(attacker.position.x - target.position.x)
 	var direction_to_target := sign(target.position.x - attacker.position.x)
 	var is_facing_target := direction_to_target == attacker.facing or distance < 0.3
+
 	if distance <= attacker.attack_range() and is_facing_target:
-		var knock := [0.18, 0.38, 0.62][attacker.attack_kind]
+		var knock := [0.16, 0.34, 0.58][attacker.attack_kind]
 		target.receive_hit(attacker.attack_damage(), knock, attacker.position.x)
-		_show_announce("%s hits %s  -  %.0f" % [attacker.fighter_name, target.fighter_name, attacker.attack_damage()], 0.35)
+		_show_announce("%s  %.0f" % [attacker.special_name() if attacker.attack_kind == 2 else "HIT", attacker.attack_damage()], 0.25)
 
 	if target.ko:
 		_end_round(attacker.fighter_name + " WINS")
@@ -280,21 +261,15 @@ func _build_ui() -> void:
 	layer.name = "HUD"
 	add_child(layer)
 
-	var title := _ui_label("NEON DISTRICT // COMBAT TEST", Vector2(34, 26), Vector2(620, 30), 18, TEXT)
-	layer.add_child(title)
+	layer.add_child(_ui_label("NEON DISTRICT // COMBAT TEST", Vector2(34, 26), Vector2(620, 30), 18, TEXT))
+	layer.add_child(_ui_label("ESC  BACK TO SETUP", Vector2(34, 58), Vector2(300, 22), 11, MUTED))
 
-	var back := _ui_label("ESC  BACK TO SETUP", Vector2(34, 58), Vector2(300, 22), 11, MUTED)
-	layer.add_child(back)
-
-	var p1_name := _ui_label("PLAYER 01", Vector2(50, 102), Vector2(260, 22), 12, CYAN)
-	layer.add_child(p1_name)
-	p1_info = _ui_label("", Vector2(50, 126), Vector2(380, 25), 14, TEXT)
+	layer.add_child(_ui_label("PLAYER 01", Vector2(50, 102), Vector2(260, 22), 12, CYAN))
+	p1_info = _ui_label("", Vector2(50, 126), Vector2(520, 25), 14, TEXT)
 	layer.add_child(p1_info)
 
-	var p2_name := _ui_label("PLAYER 02", Vector2(970, 102), Vector2(260, 22), 12, PINK)
-	p2_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	layer.add_child(p2_name)
-	p2_info = _ui_label("", Vector2(850, 126), Vector2(380, 25), 14, TEXT)
+	layer.add_child(_ui_label("PLAYER 02", Vector2(970, 102), Vector2(260, 22), 12, PINK))
+	p2_info = _ui_label("", Vector2(750, 126), Vector2(480, 25), 14, TEXT)
 	p2_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	layer.add_child(p2_info)
 
@@ -309,16 +284,13 @@ func _build_ui() -> void:
 	announce_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layer.add_child(announce_label)
 
-	var controls := _ui_label(
-		"P1  A/D move  W jump  F light  G heavy  H special  R block  T dash  1/2/3 style  4 weapon\n" +
-		"P2  ←/→ move  ↑ jump  J light  K heavy  L special  I block  O dash  7/8/9 style  0 weapon",
-		Vector2(34, 638), Vector2(1210, 50), 11, MUTED
-	)
+	var controls_text := "P1  A/D move  W jump  F light  G heavy  H special  R block  T dash  1/2/3 style\n" + 		"P2  ←/→ move  ↑ jump  J light  K heavy  L special  I block  O dash  7/8/9 style"
+	var controls := _ui_label(controls_text, Vector2(34, 638), Vector2(1210, 50), 11, MUTED)
 	layer.add_child(controls)
 
-	footer_label = _ui_label("ENTER / R = rematch after KO", Vector2(820, 598), Vector2(390, 24), 11, MUTED)
-	footer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	layer.add_child(footer_label)
+	var rematch := _ui_label("ENTER / R = rematch after KO", Vector2(820, 598), Vector2(390, 24), 11, MUTED)
+	rematch.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	layer.add_child(rematch)
 
 func _health_bar(layer: CanvasLayer, pos: Vector2, accent: Color) -> ColorRect:
 	var bg := ColorRect.new()
@@ -326,6 +298,7 @@ func _health_bar(layer: CanvasLayer, pos: Vector2, accent: Color) -> ColorRect:
 	bg.size = Vector2(360, 22)
 	bg.color = Color(0.05, 0.06, 0.12, 0.95)
 	layer.add_child(bg)
+
 	var fill := ColorRect.new()
 	fill.position = Vector2.ZERO
 	fill.size = bg.size
@@ -342,9 +315,10 @@ func _update_ui() -> void:
 	p1_fill.size.x = 360.0 * player_one.health / player_one.max_health
 	p2_fill.position.x = 360.0 - 360.0 * player_two.health / player_two.max_health
 	p2_fill.size.x = 360.0 * player_two.health / player_two.max_health
+
 	timer_label.text = str(int(ceil(round_time)))
-	p1_info.text = "%s  •  %s  •  %s  •  %03d HP" % [player_one.fighter_name, player_one.style_name(), player_one.weapon_name(), int(player_one.health)]
-	p2_info.text = "%s  •  %s  •  %s  •  %03d HP" % [player_two.fighter_name, player_two.style_name(), player_two.weapon_name(), int(player_two.health)]
+	p1_info.text = "%s  •  %s  •  %03d HP" % [player_one.fighter_name, player_one.style_name(), int(player_one.health)]
+	p2_info.text = "%s  •  %s  •  %03d HP" % [player_two.fighter_name, player_two.style_name(), int(player_two.health)]
 	announce_label.text = announce_text if announce_timer > 0.0 else ""
 
 func _show_announce(message: String, duration: float) -> void:
