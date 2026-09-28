@@ -92,7 +92,7 @@ func _build_header() -> void:
 	add_child(step)
 
 	var version := Label.new()
-	version.text = "PROTOTYPE  •  0.3"
+	version.text = "PROTOTYPE  •  0.4"
 	version.position = Vector2(get_viewport_rect().size.x - 245, 58)
 	version.size = Vector2(185, 26)
 	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
