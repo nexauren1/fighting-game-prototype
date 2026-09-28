@@ -1,28 +1,33 @@
 # Hunter's Rise — Fighting Game Prototype
 
-A small, low-cost prototype for a stylized fighting game.
+Prototype of a stylized fighting game built to grow one milestone at a time.
 
-## Current milestone
+## v0.2 — Game flow
 
-### v0.1 — Home
-- Neon/cinematic visual identity
-- Home menu
-- PLAY / CHARACTERS / SETTINGS actions
-- Procedural character silhouettes
-- Responsive 1280×720 layout
-- No external art assets required
+Implemented:
+- Home
+- Character Select
+- Arena Select
+- Battle Setup
+- Settings
+- Back/forward navigation
+- Placeholder hunter slots
+- Placeholder arena slot
+- Neon District visual preview
+- No final characters or 3D arena assets required yet
+
+## Next milestone
+
+After the navigation and UI are stable:
+1. Add first 3D hunter
+2. Add second 3D hunter
+3. Add the Neon District arena
+4. Build movement and camera
+5. Add first attack and health
+6. Create KO / rematch flow
 
 ## Run
 
-Install Godot 4.x, import this repository as a project, and run the main scene.
+Open the project in Godot 4.x and run the main scene.
 
-## Roadmap
-
-1. Home
-2. Character select
-3. First arena: Neon District
-4. One playable hunter
-5. Second hunter
-6. Movement + attack + defense
-7. Health + KO + rematch
-8. Replace prototype visuals with final 3D assets
+The current UI is intentionally procedural so the project remains lightweight while the core game flow is being designed.
