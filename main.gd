@@ -11,6 +11,7 @@ const GREEN := Color("#72F7C2")
 const TEXT_MAIN := Color("#F5F7FF")
 const TEXT_MUTED := Color("#8992B4")
 const GRID := Color(0.25, 0.42, 0.75, 0.08)
+const FIGHTER_PREVIEW := preload("res://fighter_preview.tscn")
 
 var pulse := 0.0
 var screen_name := "home"
@@ -173,7 +174,7 @@ func _character_card(x: float, name_top: String, name: String, accent: Color, in
 	root.add_child(top)
 	root.add_child(_label(name, Vector2(28, 52), Vector2(250, 40), 30, TEXT_MAIN))
 
-	# Procedural placeholder portrait
+	# Reusable 3D preview viewport. The procedural fighter will be replaced by the final Meshy asset later.
 	var portrait := Panel.new()
 	portrait.position = Vector2(30, 112)
 	portrait.size = Vector2(190, 178)
@@ -182,14 +183,17 @@ func _character_card(x: float, name_top: String, name: String, accent: Color, in
 	ps.border_color = Color(accent.r, accent.g, accent.b, 0.34)
 	ps.set_border_width_all(1)
 	portrait.add_theme_stylebox_override("panel", ps)
-	root.add_child(portrait)
+	_add_3d_preview(portrait, accent)
 
 	var lock := _label("ASSET PENDING", Vector2(48, 182), Vector2(155, 30), 12, accent)
 	lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	portrait.add_child(lock)
 
-	# Mini silhouette
-	root.add_child(_label("◇", Vector2(92, 132), Vector2(60, 45), 42, accent))
+	var preview_label := _label("3D PREVIEW", Vector2(58, 153), Vector2(135, 20), 10, TEXT_MUTED)
+	preview_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	portrait.add_child(preview_label)
+
+	root.add_child(portrait)
 
 	root.add_child(_label("ROLE", Vector2(255, 116), Vector2(100, 22), 11, TEXT_MUTED))
 	root.add_child(_label("PROTOTYPE", Vector2(255, 140), Vector2(180, 30), 16, TEXT_MAIN))
@@ -261,12 +265,19 @@ func _build_setup() -> void:
 	add_child(_label("BATTLE SETUP", Vector2(72, 140), Vector2(600, 54), 38, TEXT_MAIN))
 	add_child(_label("Everything is wired before the final assets arrive.", Vector2(74, 194), Vector2(700, 30), 15, TEXT_MUTED))
 
-	var p1 := _setup_card(Vector2(72, 265), "PLAYER 01", "PHANTOM", CYAN)
+	var p1_index := selected_hunter
+	var p2_index := 1 if selected_hunter == 0 else 0
+	var p1_name := "PHANTOM" if p1_index == 0 else "VANGUARD"
+	var p2_name := "PHANTOM" if p2_index == 0 else "VANGUARD"
+	var p1_accent := CYAN if p1_index == 0 else PINK
+	var p2_accent := CYAN if p2_index == 0 else PINK
+
+	var p1 := _setup_card(Vector2(72, 265), "PLAYER 01", p1_name, p1_accent)
 	var vs := _label("VS", Vector2(564, 335), Vector2(72, 52), 34, TEXT_MAIN)
 	vs.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(p1)
 	add_child(vs)
-	add_child(_setup_card(Vector2(664, 265), "PLAYER 02", "VANGUARD", PINK))
+	add_child(_setup_card(Vector2(664, 265), "PLAYER 02", p2_name, p2_accent))
 
 	var arena := _card(Vector2(72, 505), Vector2(1066, 104), PANEL)
 	add_child(arena)
@@ -281,6 +292,39 @@ func _build_setup() -> void:
 	var fight := _button("ENTER FIGHT  →", Vector2(878, 632), Vector2(260, 56), PURPLE)
 	fight.pressed.connect(func(): _update_status("Combat scene is the next milestone."))
 	add_child(fight)
+
+func _add_3d_preview(parent: Control, accent: Color) -> void:
+	var container := SubViewportContainer.new()
+	container.position = Vector2(1, 1)
+	container.size = parent.size - Vector2(2, 2)
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(int(container.size.x), int(container.size.y))
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+
+	var environment := WorldEnvironment.new()
+	var world_environment := Environment.new()
+	world_environment.background_mode = Environment.BG_COLOR
+	world_environment.background_color = Color("#070914")
+	world_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	world_environment.ambient_light_color = Color(accent.r, accent.g, accent.b, 1.0)
+	world_environment.ambient_light_energy = 0.65
+	environment.environment = world_environment
+	viewport.add_child(environment)
+
+	var camera := Camera3D.new()
+	camera.position = Vector3(0, 1.1, 3.4)
+	camera.current = true
+	camera.look_at(Vector3(0, 0.95, 0), Vector3.UP)
+	viewport.add_child(camera)
+
+	var fighter_preview := FIGHTER_PREVIEW.instantiate()
+	fighter_preview.accent = accent
+	viewport.add_child(fighter_preview)
+
+	container.add_child(viewport)
+	parent.add_child(container)
 
 func _setup_card(pos: Vector2, slot: String, fighter: String, accent: Color) -> Control:
 	var c := _card(pos, Vector2(428, 190), PANEL)
