@@ -2,7 +2,7 @@
 
 Prototype of a stylized fighting game built to grow one milestone at a time.
 
-## v0.2 — Game flow
+## v0.3 — 3D character foundation
 
 Implemented:
 - Home
@@ -14,16 +14,16 @@ Implemented:
 - Placeholder hunter slots
 - Placeholder arena slot
 - Neon District visual preview
-- No final characters or 3D arena assets required yet
+- Reusable 3D fighter preview in Character Select
+- Character selection now flows into Battle Setup
 
 ## Next milestone
 
-After the navigation and UI are stable:
-1. Add first 3D hunter
-2. Add second 3D hunter
-3. Add the Neon District arena
-4. Build movement and camera
-5. Add first attack and health
+1. Replace the procedural fighter preview with the first Meshy model
+2. Add the second Meshy fighter using the same preview slot
+3. Build the Neon District as a real 3D arena
+4. Add fighter movement and camera
+5. Add the first attack, hit detection, and health
 6. Create KO / rematch flow
 
 ## Run
