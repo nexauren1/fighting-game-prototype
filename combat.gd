@@ -141,38 +141,124 @@ func _setup_world() -> void:
 	var env := WorldEnvironment.new()
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = BG
+	environment.background_color = Color("#02040A")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color.WHITE
-	environment.ambient_light_energy = 1.0
+	environment.ambient_light_color = Color("#B7C9E8")
+	environment.ambient_light_energy = 0.65
+	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	environment.fog_enabled = true
+	environment.fog_light_color = Color("#10203A")
+	environment.fog_light_energy = 0.55
+	environment.fog_density = 0.012
+	environment.fog_height = 1.5
+	environment.fog_height_density = 0.18
+	environment.glow_enabled = true
+	environment.glow_intensity = 0.7
+	environment.glow_bloom = 0.18
+	environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
 	env.environment = environment
 	add_child(env)
 
-	var light := DirectionalLight3D.new()
-	light.rotation_degrees = Vector3(-50.0, -25.0, 0.0)
-	light.light_energy = 1.5
-	add_child(light)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-48.0, -28.0, 0.0)
+	sun.light_color = Color("#D8E8FF")
+	sun.light_energy = 1.15
+	sun.shadow_enabled = true
+	add_child(sun)
 
-	# Floor.
-	_add_box(self, Vector3(0, -0.15, 0), Vector3(20, 0.30, 8), Color("#15192D"))
+	_add_box(self, Vector3(0, -0.35, 0), Vector3(30, 0.70, 22), Color("#090C13"), 0.20, 0.82)
+	_add_box(self, Vector3(0, -0.01, 0), Vector3(20.5, 0.18, 8.5), Color("#151A23"), 0.25, 0.72)
+	_add_box(self, Vector3(0, 0.10, 0), Vector3(18.8, 0.12, 7.4), Color("#252A33"), 0.45, 0.55)
 
-	# Neon arena rails.
-	_add_box(self, Vector3(0, 0.04, -3.5), Vector3(20, 0.08, 0.08), PURPLE)
-	_add_box(self, Vector3(0, 0.04, 3.5), Vector3(20, 0.08, 0.08), CYAN)
+	_add_box(self, Vector3(0, 0.02, -4.05), Vector3(21.0, 0.28, 0.42), Color("#3A3E46"), 0.15, 0.62)
+	_add_box(self, Vector3(0, 0.02, 4.05), Vector3(21.0, 0.28, 0.42), Color("#3A3E46"), 0.15, 0.62)
+	_add_box(self, Vector3(-10.45, 0.02, 0), Vector3(0.42, 0.28, 8.5), Color("#3A3E46"), 0.15, 0.62)
+	_add_box(self, Vector3(10.45, 0.02, 0), Vector3(0.42, 0.28, 8.5), Color("#3A3E46"), 0.15, 0.62)
 
-	# Simple skyline.
-	for i in range(11):
-		var x := -10.0 + float(i) * 2.0
-		var h := 2.5 + float((i * 3) % 5) * 0.65
-		_add_box(self, Vector3(x, h * 0.5, -2.4), Vector3(1.35, h, 0.45), Color("#0B0F20"))
-		_add_box(self, Vector3(x, 0.25, -2.12), Vector3(0.80, 0.05, 0.03), CYAN if i % 2 == 0 else PINK)
+	for x in range(-8, 9, 2):
+		_add_box(self, Vector3(float(x), 0.17, 0), Vector3(0.035, 0.012, 6.9), Color("#5C6573"), 0.0, 0.5, 0.12)
+	_add_box(self, Vector3(0, 0.18, -3.48), Vector3(19.0, 0.018, 0.045), PURPLE, 0.0, 0.32, 2.0)
+	_add_box(self, Vector3(0, 0.18, 3.48), Vector3(19.0, 0.018, 0.045), CYAN, 0.0, 0.32, 2.0)
+
+	for x in [-7.5, -3.75, 0.0, 3.75, 7.5]:
+		_add_box(self, Vector3(x, 0.185, -3.15), Vector3(0.16, 0.02, 0.45), Color("#B9F4FF"), 0.1, 0.28, 4.0)
+		_add_box(self, Vector3(x, 0.185, 3.15), Vector3(0.16, 0.02, 0.45), Color("#B9F4FF"), 0.1, 0.28, 4.0)
+
+	_add_box(self, Vector3(-6.2, 0.195, 1.75), Vector3(2.8, 0.012, 0.72), Color("#17202B"), 0.65, 0.16)
+	_add_box(self, Vector3(4.8, 0.197, -1.9), Vector3(3.4, 0.012, 0.55), Color("#141C26"), 0.72, 0.12)
+	_add_box(self, Vector3(0.5, 0.198, 2.45), Vector3(1.7, 0.012, 0.40), Color("#1B2430"), 0.62, 0.15)
+
+	for i in range(13):
+		var x := -16.0 + float(i) * 2.65
+		var width := 1.55 + float((i * 7) % 4) * 0.22
+		var depth := 1.7 + float((i * 5) % 3) * 0.35
+		var height := 5.5 + float((i * 11) % 7) * 1.35
+		var z := -6.0 - float(i % 3) * 0.7
+		_add_city_building(x, z, width, depth, height, i)
+	_add_city_building(-7.0, -5.0, 3.2, 2.4, 11.5, 21)
+	_add_city_building(7.2, -5.5, 3.5, 2.6, 13.0, 22)
+
+	for x in [-8.8, 8.8]:
+		_add_box(self, Vector3(x, 0.52, -2.7), Vector3(1.1, 0.72, 0.95), Color("#30343C"), 0.55, 0.72)
+		_add_box(self, Vector3(x, 0.93, -2.7), Vector3(0.72, 0.08, 0.56), Color("#606875"), 0.65, 0.35)
+		_add_box(self, Vector3(x, 0.20, -2.22), Vector3(1.55, 0.12, 0.08), CYAN if x < 0 else PINK, 0.0, 0.35, 2.2)
+
+	for x in [-9.2, -6.1, 6.1, 9.2]:
+		_add_cylinder(self, Vector3(x, 0.62, -3.55), 0.08, 1.15, Color("#545A64"), 0.35, 0.55)
+		_add_box(self, Vector3(x, 1.18, -3.55), Vector3(0.75, 0.06, 0.06), Color("#5A626D"), 0.35, 0.48)
+
+	_add_omni_light(Vector3(-7.6, 3.6, -3.8), CYAN, 7.0, 8.0)
+	_add_omni_light(Vector3(7.6, 4.0, -3.8), PINK, 7.0, 8.0)
+	_add_omni_light(Vector3(0, 5.5, -4.5), Color("#9FA8FF"), 5.0, 10.0)
 
 	camera = Camera3D.new()
-	camera.fov = 48.0
-	camera.position = Vector3(0, 4.6, 14.0)
+	camera.fov = 46.0
+	camera.position = Vector3(0, 4.9, 14.8)
 	camera.current = true
 	add_child(camera)
-	camera.look_at(Vector3(0, 1.0, 0), Vector3.UP)
+	camera.look_at(Vector3(0, 1.15, 0), Vector3.UP)
+
+func _add_city_building(x: float, z: float, width: float, depth: float, height: float, index: int) -> void:
+	var wall_colors := [Color("#151923"), Color("#1B202A"), Color("#111720"), Color("#20242D")]
+	var wall := wall_colors[index % wall_colors.size()]
+	_add_box(self, Vector3(x, height * 0.5, z), Vector3(width, height, depth), wall, 0.28, 0.68)
+	_add_box(self, Vector3(x, height * 0.52, z + depth * 0.5 + 0.015), Vector3(width * 0.82, height * 0.84, 0.025), Color("#0B1622"), 0.72, 0.22)
+	var floors := maxi(2, int(height / 2.2))
+	for floor in range(floors):
+		var y := 1.05 + float(floor) * 2.0
+		if y > height - 0.55:
+			break
+		for col in range(3):
+			var window_x := x - width * 0.30 + float(col) * width * 0.30
+			var window_color := Color("#B7D9E8") if (index + floor + col) % 4 == 0 else Color("#314859")
+			_add_box(self, Vector3(window_x, y, z + depth * 0.515), Vector3(width * 0.18, 0.78, 0.035), window_color, 0.15, 0.34, 0.35 if window_color.r > 0.5 else 0.0)
+	_add_box(self, Vector3(x, height + 0.10, z), Vector3(width * 0.58, 0.18, depth * 0.62), Color("#343942"), 0.45, 0.58)
+	if index % 3 == 0:
+		_add_box(self, Vector3(x, height + 0.52, z), Vector3(width * 0.24, 0.75, depth * 0.24), Color("#4A505A"), 0.55, 0.65)
+	if index % 2 == 0:
+		_add_box(self, Vector3(x, height * 0.58, z + depth * 0.53), Vector3(width * 0.60, 0.06, 0.035), CYAN if index % 4 == 0 else PURPLE, 0.0, 0.30, 1.8)
+
+func _add_cylinder(parent: Node3D, pos: Vector3, radius: float, height: float, color: Color, metallic: float, roughness: float) -> MeshInstance3D:
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = height
+	mesh.radial_segments = 16
+	var node := MeshInstance3D.new()
+	node.mesh = mesh
+	node.position = pos
+	node.material_override = _material(color, metallic, roughness)
+	parent.add_child(node)
+	return node
+
+func _add_omni_light(pos: Vector3, color: Color, energy: float, radius: float) -> void:
+	var light := OmniLight3D.new()
+	light.position = pos
+	light.light_color = color
+	light.light_energy = energy
+	light.omni_range = radius
+	light.shadow_enabled = true
+	add_child(light)
 
 func _setup_fighters() -> void:
 	var p1_name := "PHANTOM"
@@ -212,23 +298,25 @@ func _create_fighter(display_name: String, accent: Color) -> Node3D:
 	root.set_meta("accent", accent)
 	return root
 
-func _material(color: Color) -> StandardMaterial3D:
+func _material(color: Color, metallic: float = 0.0, roughness: float = 0.65, emission_energy: float = 0.0) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	if color != Color("#111426") and color != Color("#F2FBFF") and color != Color("#0B0F20") and color != Color("#15192D"):
+	mat.metallic = metallic
+	mat.roughness = roughness
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	if emission_energy > 0.0:
 		mat.emission_enabled = true
 		mat.emission = color
-		mat.emission_energy_multiplier = 1.8
+		mat.emission_energy_multiplier = emission_energy
 	return mat
 
-func _add_box(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> MeshInstance3D:
+func _add_box(parent: Node3D, pos: Vector3, size: Vector3, color: Color, metallic: float = 0.0, roughness: float = 0.65, emission_energy: float = 0.0) -> MeshInstance3D:
 	var mesh := BoxMesh.new()
 	mesh.size = size
 	var node := MeshInstance3D.new()
 	node.mesh = mesh
 	node.position = pos
-	node.material_override = _material(color)
+	node.material_override = _material(color, metallic, roughness, emission_energy)
 	parent.add_child(node)
 	return node
 
