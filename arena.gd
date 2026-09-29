@@ -78,7 +78,46 @@ func _build_city() -> void:
 				_add_box("RoofGlow", Vector3(x, h + 0.25, z), Vector3(w * 0.38, 0.05, d * 0.38), mat_cyan if side < 0 else mat_pink)
 
 func _build_props() -> void:
-	for x in [-8.5, -4.2, 4.2, 8.5]:
+	var nexar_label := Label3D.new()
+	nexar_label.name = "NexarSign"
+	nexar_label.text = "NEXAR"
+	nexar_label.font_size = 84
+	nexar_label.pixel_size = 0.012
+	nexar_label.outline_size = 14
+	nexar_label.modulate = Color("#8DEBFF")
+	nexar_label.outline_modulate = Color("#2146A2")
+	nexar_label.position = Vector3(0, 7.5, -6.5)
+	nexar_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	nexar_label.no_depth_test = true
+	add_child(nexar_label)
+
+	var district_label := Label3D.new()
+	district_label.name = "DistrictSign"
+	district_label.text = "NEON DISTRICT"
+	district_label.font_size = 28
+	district_label.pixel_size = 0.012
+	district_label.outline_size = 8
+	district_label.modulate = Color("#FF8FE8")
+	district_label.outline_modulate = Color("#55134A")
+	district_label.position = Vector3(0, 6.55, -6.5)
+	district_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	district_label.no_depth_test = true
+	add_child(district_label)
+
+	var ring := MeshInstance3D.new()
+	ring.name = "HologramRing"
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 3.6
+	ring_mesh.outer_radius = 3.72
+	ring_mesh.rings = 48
+	ring_mesh.ring_segments = 18
+	ring.mesh = ring_mesh
+	ring.position = Vector3(0, 5.0, -5.2)
+	ring.rotation_degrees = Vector3(90, 0, 0)
+	ring.material_override = mat_cyan
+	add_child(ring)
+
+		for x in [-8.5, -4.2, 4.2, 8.5]:
 		_add_box("Pillar", Vector3(x, 1.4, -3.6), Vector3(0.18, 2.4, 0.18), mat_metal)
 		_add_box("PillarLight", Vector3(x, 2.65, -3.6), Vector3(0.26, 0.08, 0.26), mat_cyan if x < 0 else mat_pink)
 
