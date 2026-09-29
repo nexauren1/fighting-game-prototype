@@ -1,7 +1,7 @@
 extends Node
 
 const FighterScript = preload("res://fighter.gd")
-const BattleScript = preload("res://battle.gd")
+const BattleScene = preload("res://battle.tscn")
 
 var selected_fighter := 0
 var root_ui: Control
@@ -168,7 +168,7 @@ func _show_stage_select() -> void:
 
 func _start_battle() -> void:
 	_clear()
-	var battle = BattleScript.new()
+	var battle = BattleScene.instantiate()
 	battle.selected_player = selected_fighter
 	add_child(battle)
 
