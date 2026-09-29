@@ -129,14 +129,14 @@ func _spawn_fighters() -> void:
 	var player_secondary := Color("#6E7CFF") if player_is_rex else Color("#FFB84D")
 	var cpu_secondary := Color("#FFB84D") if player_is_rex else Color("#6E7CFF")
 
-	player = FighterScene.instantiate()
+	player = FighterScene.instantiate() as CharacterBody3D
 	player.setup(player_name, player_accent, player_secondary)
-	player.position = Vector3(-3.2, 0.45, 0.0)
+	player.position = Vector3(-3.2, 0.30, 0.0)
 	add_child(player)
 
-	cpu = FighterScene.instantiate()
+	cpu = FighterScene.instantiate() as CharacterBody3D
 	cpu.setup(cpu_name, cpu_accent, cpu_secondary)
-	cpu.position = Vector3(3.2, 0.45, 0.0)
+	cpu.position = Vector3(3.2, 0.30, 0.0)
 	add_child(cpu)
 
 	player.rotation.y = PI * 0.5
@@ -163,8 +163,8 @@ func _update_player(delta: float) -> void:
 	player.set_block(block_held or Input.is_key_pressed(KEY_R))
 	player.set_move(input_vector, 5.2)
 
-	if player.position.y < 0.45:
-		player.position.y = 0.45
+	if player.position.y < 0.30:
+		player.position.y = 0.30
 
 	player.position.x = clampf(player.position.x, -8.3, 8.3)
 	player.position.z = clampf(player.position.z, -3.1, 3.1)
