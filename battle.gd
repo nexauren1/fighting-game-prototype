@@ -32,6 +32,10 @@ var cpu_portrait: TextureRect
 var camera_shake := 0.0
 var combo_hits := 0
 var combo_time := 0.0
+var combo_owner := ""
+var player_meter: ColorRect
+var cpu_meter: ColorRect
+var combo_stat_label: Label
 
 const CYAN := Color("#58E7FF")
 const PINK := Color("#FF5EC4")
@@ -85,7 +89,7 @@ func _input(event: InputEvent) -> void:
 		get_tree().reload_current_scene()
 		return
 
-	if key.keycode == KEY_F:
+	if key.keycode == KEY_F or key.keycode == KEY_X:
 		_player_attack(0)
 	elif key.keycode == KEY_G:
 		_player_attack(1)
