@@ -26,6 +26,7 @@ func _clear() -> void:
 
 func _show_home() -> void:
 	_clear()
+	_add_background_texture("res://art/home.svg", 1.0)
 	_header("HOME")
 	root_ui.add_child(_label("HUNTER'S\nRISE", Vector2(72, 150), Vector2(580, 150), 82, WHITE))
 	root_ui.add_child(_label("NEON DISTRICT", Vector2(76, 310), Vector2(300, 28), 16, CYAN))
@@ -44,6 +45,7 @@ func _show_home() -> void:
 
 func _show_character_select() -> void:
 	_clear()
+	_add_background_texture("res://art/select.svg", 1.0)
 	_header("01 / CHARACTER SELECT")
 	root_ui.add_child(_label("CHOOSE YOUR FIGHTER", Vector2(72, 132), Vector2(650, 50), 38, WHITE))
 	root_ui.add_child(_label("The other fighter becomes the CPU opponent.", Vector2(74, 182), Vector2(600, 26), 15, MUTED))
@@ -121,6 +123,7 @@ func _make_preview(index: int, accent: Color) -> Control:
 
 func _show_stage_select() -> void:
 	_clear()
+	_add_background_texture("res://art/arena.svg", 1.0)
 	_header("02 / PLACE")
 	root_ui.add_child(_label("SELECT YOUR PLACE", Vector2(72, 132), Vector2(620, 50), 38, WHITE))
 	root_ui.add_child(_label("One focused stage: a city around a dedicated fighting platform.", Vector2(74, 182), Vector2(720, 26), 15, MUTED))
@@ -172,6 +175,21 @@ func _start_battle() -> void:
 	var battle = BattleScene.instantiate()
 	battle.selected_player = selected_fighter
 	add_child(battle)
+
+
+func _add_background_texture(path: String, opacity: float = 1.0) -> void:
+	var texture := load(path) as Texture2D
+	if texture == null:
+		return
+	var background := TextureRect.new()
+	background.texture = texture
+	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	background.modulate = Color(1, 1, 1, opacity)
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root_ui.add_child(background)
+	root_ui.move_child(background, 0)
 
 func _header(step: String) -> void:
 	root_ui.add_child(_label("✦  HUNTER'S RISE", Vector2(52, 40), Vector2(360, 30), 20, WHITE))
