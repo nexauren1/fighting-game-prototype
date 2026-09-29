@@ -413,9 +413,9 @@ func _setup_touch_controls() -> void:
 	joystick.mouse_filter = Control.MOUSE_FILTER_STOP
 	mobile_root.add_child(joystick)
 
-	_create_action_button("✦\nLIGHT", 0, CYAN, func(): _player_attack(0))
-	_create_action_button("✺\nHEAVY", 1, PURPLE, func(): _player_attack(1))
-	_create_action_button("⚡\nSPECIAL", 2, PINK, func(): _player_attack(2))
+	_create_action_button("X\nCOMBO", 0, CYAN, func(): _player_attack(0))
+	_create_action_button("Y\nHEAVY", 1, PURPLE, func(): _player_attack(1))
+	_create_action_button("B\nSPECIAL", 2, PINK, func(): _player_attack(2))
 	_create_block_button()
 	_layout_touch_controls()
 func _create_action_button(text_value: String, index: int, color: Color, action: Callable) -> void:
@@ -432,7 +432,7 @@ func _create_action_button(text_value: String, index: int, color: Color, action:
 
 func _create_block_button() -> void:
 	var button := Button.new()
-	button.text = "⬡\nBLOCK"
+	button.text = "A\nBLOCK"
 	button.name = "Block"
 	button.size = Vector2(88, 76)
 	button.add_theme_font_size_override("font_size", 13)
