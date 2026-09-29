@@ -30,6 +30,7 @@ var combo_window := 0.0
 var queued_light := false
 var last_was_light := false
 var overdrive := 0.0
+var enhanced_special := false
 
 const ATTACK_DURATION := [0.30, 0.46, 0.62]
 const ATTACK_DAMAGE := [8.0, 16.0, 24.0]
@@ -93,6 +94,10 @@ func start_attack(kind: int) -> bool:
 
 func _start_attack_internal(kind: int) -> bool:
 	attack_kind = clampi(kind, 0, 2)
+	enhanced_special = false
+	if attack_kind == 2 and overdrive >= 70.0:
+		overdrive -= 70.0
+		enhanced_special = true
 	if attack_kind == 0:
 		if not last_was_light or combo_window <= 0.0:
 			combo_stage = 1
@@ -131,7 +136,7 @@ func consume_overdrive(amount: float) -> bool:
 	return true
 
 func is_special_enhanced() -> bool:
-	return attack_kind == 2 and overdrive >= 70.0
+	return enhanced_special
 
 func is_attacking() -> bool:
 	return attack_time > 0.0
