@@ -25,6 +25,11 @@ var base_height := 0.0
 var move_amount := 0.0
 var hit_flash := 0.0
 var stance_phase := 0.0
+var combo_stage := 0
+var combo_window := 0.0
+var queued_light := false
+var last_was_light := false
+var overdrive := 0.0
 
 const ATTACK_DURATION := [0.30, 0.46, 0.62]
 const ATTACK_DAMAGE := [8.0, 16.0, 24.0]
@@ -41,7 +46,11 @@ func _physics_process(delta: float) -> void:
 	if attack_time > 0.0:
 		attack_time = maxf(0.0, attack_time - delta)
 		if attack_time == 0.0:
+			var continue_light := queued_light
+			queued_light = false
 			attack_kind = -1
+			if continue_light:
+				_start_attack_internal(0)
 	if not is_on_floor():
 		velocity.y -= 22.0 * delta
 	else:
@@ -49,6 +58,9 @@ func _physics_process(delta: float) -> void:
 
 	if stun_time > 0.0:
 		stun_time = maxf(0.0, stun_time - delta)
+	combo_window = maxf(0.0, combo_window - delta)
+	if combo_window <= 0.0 and not is_attacking() and not queued_light:
+		combo_stage = 0
 	hit_flash = maxf(0.0, hit_flash - delta)
 	stance_phase += delta * 2.4
 
@@ -70,13 +82,56 @@ func set_move(direction: Vector2, speed: float) -> void:
 		rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), 0.30)
 
 func start_attack(kind: int) -> bool:
-	if knocked_out or stun_time > 0.0 or is_attacking():
+	if knocked_out or stun_time > 0.0:
 		return false
+	if is_attacking():
+		if kind == 0 and attack_kind == 0 and attack_time <= 0.20 and combo_window > 0.0:
+			queued_light = true
+			return true
+		return false
+	return _start_attack_internal(kind)
+
+func _start_attack_internal(kind: int) -> bool:
 	attack_kind = clampi(kind, 0, 2)
-	attack_duration = ATTACK_DURATION[attack_kind]
+	if attack_kind == 0:
+		if not last_was_light or combo_window <= 0.0:
+			combo_stage = 1
+		else:
+			combo_stage += 1
+			if combo_stage > 3:
+				combo_stage = 1
+		last_was_light = true
+		attack_duration = [0.28, 0.32, 0.46][combo_stage - 1]
+		combo_window = 0.62
+	else:
+		combo_stage = 0
+		combo_window = 0.0
+		last_was_light = false
+		attack_duration = ATTACK_DURATION[attack_kind]
 	attack_time = attack_duration
 	attack_hit_done = false
 	return true
+
+func reset_combo() -> void:
+	combo_stage = 0
+	combo_window = 0.0
+	queued_light = false
+	last_was_light = false
+
+func get_combo_stage() -> int:
+	return combo_stage
+
+func add_overdrive(amount: float) -> void:
+	overdrive = clampf(overdrive + amount, 0.0, 100.0)
+
+func consume_overdrive(amount: float) -> bool:
+	if overdrive < amount:
+		return false
+	overdrive -= amount
+	return true
+
+func is_special_enhanced() -> bool:
+	return attack_kind == 2 and overdrive >= 70.0
 
 func is_attacking() -> bool:
 	return attack_time > 0.0
@@ -93,11 +148,15 @@ func consume_attack_hit() -> void:
 func get_attack_damage() -> float:
 	if attack_kind < 0:
 		return 0.0
-	return ATTACK_DAMAGE[attack_kind]
+	if attack_kind == 0:
+		return [8.0, 10.0, 15.0][maxi(combo_stage - 1, 0)] * (1.0 + overdrive * 0.0015)
+	return ATTACK_DAMAGE[attack_kind] * (1.12 if overdrive >= 70.0 else 1.0)
 
 func get_attack_range() -> float:
 	if attack_kind < 0:
 		return 0.0
+	if attack_kind == 0:
+		return [1.50, 1.62, 1.86][maxi(combo_stage - 1, 0)]
 	return ATTACK_RANGE[attack_kind]
 
 func take_hit(damage: float, push_direction: Vector3) -> void:
