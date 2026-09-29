@@ -272,6 +272,16 @@ func _check_attack(attacker: CharacterBody3D, target: CharacterBody3D) -> void:
 	combo_hits += 1
 	combo_time = 0.95
 	var was_blocking := target.blocking
+	var perfect_block := target.is_perfect_block()
+	if perfect_block:
+		target.take_hit(0.0, push)
+		attacker.trigger_stun(0.30)
+		target.add_overdrive(14.0)
+		camera_shake = 0.24
+		_spawn_hit_effect(target.global_position + Vector3.UP * 1.10, target.accent, true)
+		announce.text = "PERFECT BLOCK!"
+		announce.modulate = Color("#F8FBFF")
+		return
 	var was_attacking := target.is_attacking()
 	target.take_hit(attacker.get_attack_damage(), push)
 	attacker.add_overdrive(8.0 if attacker.attack_kind == 0 else 12.0)
