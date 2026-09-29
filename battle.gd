@@ -456,12 +456,12 @@ func _style_touch_button(button: Button, color: Color) -> void:
 func _process(_delta: float) -> void:
 	_layout_touch_controls()
 
-func _spawn_hit_effect	if mobile_root == null or joystick == null:
+func _layout_touch_controls() -> void:
+	if mobile_root == null or joystick == null:
 		return
 	var size := get_viewport().get_visible_rect().size
 	joystick.position = Vector2(34, size.y - 208)
 
-	var buttons := mobile_root.get_children()
 	var start_x := size.x - 390.0
 	var y := size.y - 175.0
 	var gap := 96.0
@@ -480,6 +480,67 @@ func _spawn_hit_effect	if mobile_root == null or joystick == null:
 	if block:
 		block.position = Vector2(start_x + gap * 3.0, y - 46)
 
+func _spawn_hit_effect(pos: Vector3, color: Color, heavy: bool) -> void:
+	var root := Node3D.new()
+	root.name = "ImpactFX"
+	root.global_position = pos
+	add_child(root)
+
+	var flash := MeshInstance3D.new()
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.20 if not heavy else 0.28
+	sphere.height = 0.40 if not heavy else 0.56
+	flash.mesh = sphere
+	flash.material_override = _fx_material(color, color, 3.5)
+	root.add_child(flash)
+
+	var ring_node := MeshInstance3D.new()
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.30
+	ring.outer_radius = 0.37
+	ring.rings = 28
+	ring.ring_segments = 12
+	ring_node.mesh = ring
+	ring_node.material_override = _fx_material(color, color, 2.8)
+	root.add_child(ring_node)
+
+	var light := OmniLight3D.new()
+	light.light_color = color
+	light.light_energy = 7.0 if heavy else 4.0
+	light.omni_range = 4.0
+	root.add_child(light)
+
+	var tween := root.create_tween().set_parallel(true)
+	tween.tween_property(flash, "scale", Vector3.ONE * (3.0 if heavy else 2.2), 0.16)
+	tween.tween_property(ring_node, "scale", Vector3.ONE * (2.8 if heavy else 2.0), 0.18)
+	tween.tween_property(light, "light_energy", 0.0, 0.20)
+
+	var spark_count := 8 if heavy else 5
+	for i in range(spark_count):
+		var spark := MeshInstance3D.new()
+		var spark_mesh := BoxMesh.new()
+		spark_mesh.size = Vector3(0.035, 0.035, 0.24 if heavy else 0.18)
+		spark.mesh = spark_mesh
+		spark.material_override = _fx_material(color, color, 4.0)
+		root.add_child(spark)
+		var angle := float(i) * TAU / float(spark_count)
+		spark.position = Vector3(0, 0, 0)
+		spark.rotation.y = angle
+		var direction := Vector3(cos(angle), randf_range(-0.25, 0.25), sin(angle))
+		tween.tween_property(spark, "position", direction * (1.3 if heavy else 0.9), 0.24)
+
+	tween.tween_callback(root.queue_free).set_delay(0.28)
+
+func _fx_material(albedo: Color, emission: Color, energy: float) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color(albedo.r, albedo.g, albedo.b, 0.95)
+	material.emission_enabled = true
+	material.emission = emission
+	material.emission_energy_multiplier = energy
+	return material
+
 func _update_hud() -> void:
 	if not is_instance_valid(player_bar) or not is_instance_valid(cpu_bar):
 		return
@@ -492,16 +553,17 @@ func _update_hud() -> void:
 	player_name_label.text = "%s • %03d HP" % [player.fighter_name, int(player.health)]
 	cpu_name_label.text = "%s • %03d HP" % [cpu.fighter_name, int(cpu.health)]
 
-func _health_bar(parent: Control, pos: Vector2, width: float, color: Color) -> ColorRect:
+func _health_bar(parent: Control, pos: Vector2, width: float, color: Color, reverse: bool) -> ColorRect:
 	var background := ColorRect.new()
 	background.position = pos
-	background.size = Vector2(width, 18)
+	background.size = Vector2(width, 20)
 	background.color = Color("#111624")
 	parent.add_child(background)
 	var fill := ColorRect.new()
 	fill.size = background.size
 	fill.color = color
 	background.add_child(fill)
+	fill.set_meta("reverse", reverse)
 	return fill
 
 func _end_message(text_value: String) -> void:
