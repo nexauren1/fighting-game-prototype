@@ -1,6 +1,6 @@
 extends Node3D
 
-const FighterScript = preload("res://fighter.gd")
+const FighterScene = preload("res://fighter.tscn")
 const ArenaScript = preload("res://arena.gd")
 const JoystickScript = preload("res://virtual_joystick.gd")
 
@@ -129,12 +129,12 @@ func _spawn_fighters() -> void:
 	var player_secondary := Color("#6E7CFF") if player_is_rex else Color("#FFB84D")
 	var cpu_secondary := Color("#FFB84D") if player_is_rex else Color("#6E7CFF")
 
-	player = FighterScript.new()
+	player = FighterScene.instantiate()
 	player.setup(player_name, player_accent, player_secondary)
 	player.position = Vector3(-3.2, 0.45, 0.0)
 	add_child(player)
 
-	cpu = FighterScript.new()
+	cpu = FighterScene.instantiate()
 	cpu.setup(cpu_name, cpu_accent, cpu_secondary)
 	cpu.position = Vector3(3.2, 0.45, 0.0)
 	add_child(cpu)
