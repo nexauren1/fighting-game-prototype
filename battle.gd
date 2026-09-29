@@ -5,6 +5,7 @@ const ArenaScript = preload("res://arena.gd")
 const JoystickScript = preload("res://virtual_joystick.gd")
 
 var selected_player := 0
+var selected_style := 0
 var player: CharacterBody3D
 var cpu: CharacterBody3D
 var arena
@@ -164,12 +165,12 @@ func _spawn_fighters() -> void:
 	var cpu_secondary := Color("#FFB84D") if player_is_rex else Color("#6E7CFF")
 
 	player = FighterScene.instantiate() as CharacterBody3D
-	player.setup(player_name, player_accent, player_secondary)
+	player.setup(player_name, player_accent, player_secondary, selected_style)
 	player.position = Vector3(-3.2, 0.30, 0.0)
 	add_child(player)
 
 	cpu = FighterScene.instantiate() as CharacterBody3D
-	cpu.setup(cpu_name, cpu_accent, cpu_secondary)
+	cpu.setup(cpu_name, cpu_accent, cpu_secondary, (selected_style + 1) % 3)
 	cpu.position = Vector3(3.2, 0.30, 0.0)
 	add_child(cpu)
 
@@ -195,7 +196,7 @@ func _update_player(delta: float) -> void:
 			input_vector.y += 1.0
 
 	player.set_block(block_held or Input.is_key_pressed(KEY_R))
-	player.set_move(input_vector, 5.2)
+	player.set_move(input_vector, player.get_style_speed(5.2))
 
 	if player.position.y < 0.30:
 		player.position.y = 0.30
@@ -214,7 +215,7 @@ func _update_cpu(_delta: float) -> void:
 
 	if distance > 2.2:
 		cpu.set_block(false)
-		cpu.set_move(direction, 3.7)
+		cpu.set_move(direction, cpu.get_style_speed(3.7))
 	elif cpu_decision_time <= 0.0 and cpu_attack_cooldown <= 0.0:
 		cpu_decision_time = 0.35
 		cpu_attack_cooldown = 0.75
@@ -584,8 +585,8 @@ func _update_hud() -> void:
 		combo_label.text = "COMBO  x%d" % combo_hits if combo_hits > 1 and combo_time > 0.0 else ""
 	combo_stat_label.text = "OVERDRIVE %d%% • %s" % [int(player.overdrive), "ENHANCED SPECIAL" if player.overdrive >= 70.0 else "CHARGE"]
 	timer_label.text = str(int(ceil(round_time)))
-	player_name_label.text = "%s • %03d HP" % [player.fighter_name, int(player.health)]
-	cpu_name_label.text = "%s • %03d HP" % [cpu.fighter_name, int(cpu.health)]
+	player_name_label.text = "%s • %s • %03d HP" % [player.fighter_name, player.get_style_label(), int(player.health)]
+	cpu_name_label.text = "%s • %s • %03d HP" % [cpu.fighter_name, cpu.get_style_label(), int(cpu.health)]
 
 func _health_bar(parent: Control, pos: Vector2, width: float, color: Color, reverse: bool) -> ColorRect:
 	var background := ColorRect.new()
