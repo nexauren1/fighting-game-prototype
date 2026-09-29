@@ -23,6 +23,8 @@ var leg_r: Node3D
 var head: Node3D
 var base_height := 0.0
 var move_amount := 0.0
+var hit_flash := 0.0
+var stance_phase := 0.0
 
 const ATTACK_DURATION := [0.30, 0.46, 0.62]
 const ATTACK_DAMAGE := [8.0, 16.0, 24.0]
@@ -47,6 +49,8 @@ func _physics_process(delta: float) -> void:
 
 	if stun_time > 0.0:
 		stun_time = maxf(0.0, stun_time - delta)
+	hit_flash = maxf(0.0, hit_flash - delta)
+	stance_phase += delta * 2.4
 
 	velocity.x = move_toward(velocity.x, 0.0, 18.0 * delta)
 	velocity.z = move_toward(velocity.z, 0.0, 18.0 * delta)
@@ -105,6 +109,7 @@ func take_hit(damage: float, push_direction: Vector3) -> void:
 	else:
 		stun_time = maxf(stun_time, 0.26)
 	health = maxf(0.0, health - damage)
+	hit_flash = 0.14
 	velocity += push_direction * 1.8
 	if health <= 0.0:
 		knocked_out = true
@@ -150,6 +155,9 @@ func _build_model() -> void:
 	_add_box(body_core, "Chest", Vector3(0, 1.42, 0.27), Vector3(0.58, 0.34, 0.10), accent_mat)
 	_add_box(body_core, "Core", Vector3(0, 1.30, 0.33), Vector3(0.25, 0.15, 0.07), visor)
 	_add_box(body_core, "Waist", Vector3(0, 0.95, 0.25), Vector3(0.72, 0.12, 0.10), secondary_mat)
+	_add_box(body_core, "BeltFront", Vector3(0, 1.00, 0.34), Vector3(0.64, 0.11, 0.06), accent_mat)
+	_add_box(body_core, "ChestLeft", Vector3(-0.24, 1.50, 0.30), Vector3(0.24, 0.28, 0.09), secondary_mat, Vector3(0, -10, -4))
+	_add_box(body_core, "ChestRight", Vector3(0.24, 1.50, 0.30), Vector3(0.24, 0.28, 0.09), secondary_mat, Vector3(0, 10, 4))
 
 	_add_sphere(body_core, "ShoulderL", Vector3(-0.52, 1.52, 0), 0.16, accent_mat)
 	_add_sphere(body_core, "ShoulderR", Vector3(0.52, 1.52, 0), 0.16, accent_mat)
@@ -157,6 +165,10 @@ func _build_model() -> void:
 	arm_r = _add_limb(body_core, "ArmR", Vector3(0.53, 1.21, 0), 0.12, 0.58, dark2)
 	_add_box(body_core, "GloveL", Vector3(-0.54, 0.91, 0.05), Vector3(0.24, 0.28, 0.26), accent_mat)
 	_add_box(body_core, "GloveR", Vector3(0.54, 0.91, 0.05), Vector3(0.24, 0.28, 0.26), accent_mat)
+	_add_box(body_core, "ForearmL", Vector3(-0.54, 1.05, 0.11), Vector3(0.18, 0.24, 0.30), secondary_mat, Vector3(0, 0, -10))
+	_add_box(body_core, "ForearmR", Vector3(0.54, 1.05, 0.11), Vector3(0.18, 0.24, 0.30), secondary_mat, Vector3(0, 0, 10))
+	_add_box(body_core, "ShinL", Vector3(-0.18, 0.43, 0.10), Vector3(0.18, 0.42, 0.08), secondary_mat)
+	_add_box(body_core, "ShinR", Vector3(0.18, 0.43, 0.10), Vector3(0.18, 0.42, 0.08), secondary_mat)
 
 	_add_cylinder(body_core, "Neck", Vector3(0, 1.73, 0), 0.12, 0.16, skin)
 	head = Node3D.new()
@@ -173,6 +185,8 @@ func _build_model() -> void:
 	else:
 		_add_box(body_core, "HairBand", Vector3(0, 1.98, -0.24), Vector3(0.62, 0.12, 0.08), hair)
 		_add_box(body_core, "Sash", Vector3(0, 1.08, 0.31), Vector3(0.58, 0.06, 0.08), accent_mat)
+		_add_box(body_core, "HipGuardL", Vector3(-0.30, 0.92, 0.17), Vector3(0.14, 0.30, 0.20), secondary_mat, Vector3(0, 0, -12))
+		_add_box(body_core, "HipGuardR", Vector3(0.30, 0.92, 0.17), Vector3(0.14, 0.30, 0.20), secondary_mat, Vector3(0, 0, 12))
 
 func _animate(_delta: float) -> void:
 	if visual == null:
@@ -208,6 +222,13 @@ func _animate(_delta: float) -> void:
 			arm_r.rotation.z = -1.20 * swing
 			body_core.rotation.z = -0.10 * swing
 			body_core.scale = Vector3.ONE * (1.0 + 0.06 * swing)
+	elif stun_time > 0.0:
+		var recoil := sin(stun_time * 24.0) * 0.10
+		body_core.rotation.x = recoil
+		arm_l.rotation.z = 0.95
+		arm_r.rotation.z = -0.95
+		leg_l.rotation.x = -0.10
+		leg_r.rotation.x = 0.12
 	elif move_amount > 0.1:
 		var step := sin(t * 3.0) * 0.12
 		leg_l.rotation.x = step
@@ -215,10 +236,15 @@ func _animate(_delta: float) -> void:
 		arm_l.rotation.x = -step * 0.7
 		arm_r.rotation.x = step * 0.7
 	else:
-		leg_l.rotation.x = 0.0
-		leg_r.rotation.x = 0.0
-		arm_l.rotation.z = 0.0
-		arm_r.rotation.z = 0.0
+		var bounce := sin(stance_phase) * 0.035
+		body_core.position.y = bounce
+		body_core.rotation.x = -0.035
+		arm_l.rotation.z = 0.28 + sin(stance_phase) * 0.05
+		arm_r.rotation.z = -0.42 - sin(stance_phase) * 0.05
+		arm_l.rotation.x = -0.18
+		arm_r.rotation.x = -0.28
+		leg_l.rotation.x = -0.04
+		leg_r.rotation.x = 0.05
 
 func _material(color: Color, metallic: float, roughness: float, emission_color: Color = Color.WHITE, emission_energy: float = 0.0) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
