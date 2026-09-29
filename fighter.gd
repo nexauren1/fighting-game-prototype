@@ -222,6 +222,7 @@ func _animate(_delta: float) -> void:
 
 func _material(color: Color, metallic: float, roughness: float, emission_color: Color = Color.WHITE, emission_energy: float = 0.0) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.albedo_color = color
 	material.metallic = metallic
 	material.roughness = roughness
