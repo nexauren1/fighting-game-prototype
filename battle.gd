@@ -294,6 +294,10 @@ func _face_each_other() -> void:
 		player.look_at(player_target, Vector3.UP)
 		cpu.look_at(cpu_target, Vector3.UP)
 
+func _on_joystick_flick(direction: Vector2) -> void:
+	if not round_over:
+		_player_dash(Vector3(direction.x, 0.0, direction.y))
+
 func _player_attack(kind: int) -> void:
 	if round_over or not is_instance_valid(player):
 		return
@@ -302,13 +306,15 @@ func _player_attack(kind: int) -> void:
 	if player.start_attack(kind):
 		player_attack_cooldown = 0.12
 
-func _player_dash() -> void:
+func _player_dash(direction_hint: Vector3 = Vector3.ZERO) -> void:
 	if round_over or not is_instance_valid(player) or player.knocked_out:
 		return
-	var direction := Vector3.ZERO
-	if joystick != null:
-		direction.x = joystick.get_vector().x
-		direction.z = joystick.get_vector().y
+	var direction := direction_hint
+	if direction.length() < 0.1:
+		direction = Vector3.ZERO
+		if joystick != null:
+			direction.x = joystick.get_vector().x
+			direction.z = joystick.get_vector().y
 	if direction.length() < 0.1:
 		direction.x = 1.0 if player.position.x < cpu.position.x else -1.0
 	direction = direction.normalized()
@@ -441,6 +447,7 @@ func _setup_touch_controls() -> void:
 	joystick = JoystickScript.new()
 	joystick.size = Vector2(190, 190)
 	joystick.mouse_filter = Control.MOUSE_FILTER_STOP
+	joystick.flicked.connect(_on_joystick_flick)
 	mobile_root.add_child(joystick)
 
 	_create_action_button("X\nCOMBO", 0, CYAN, func(): _player_attack(0))
