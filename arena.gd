@@ -47,7 +47,7 @@ func _build_floor() -> void:
 
 	_add_box("CenterGlow", Vector3(0, 0.34, 0), Vector3(0.08, 0.02, 5.6), mat_purple)
 
-	_add_static_collision(Vector3(0, -0.10, 0), Vector3(34, 0.50, 26))
+	_add_static_collision(Vector3(0, 0.04, 0), Vector3(34, 0.50, 26))
 	_add_static_collision(Vector3(0, 0.42, -4.12), Vector3(20.0, 0.40, 0.25))
 	_add_static_collision(Vector3(0, 0.42, 4.12), Vector3(20.0, 0.40, 0.25))
 	_add_static_collision(Vector3(-10.0, 0.42, 0), Vector3(0.25, 0.40, 8.6))
