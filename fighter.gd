@@ -36,6 +36,10 @@ func setup(name_value: String, accent_value: Color, secondary_value: Color) -> v
 	_build_model()
 
 func _physics_process(delta: float) -> void:
+	if attack_time > 0.0:
+		attack_time = maxf(0.0, attack_time - delta)
+		if attack_time == 0.0:
+			attack_kind = -1
 	if not is_on_floor():
 		velocity.y -= 22.0 * delta
 	else:
