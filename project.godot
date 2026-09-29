@@ -1,6 +1,6 @@
 [application]
 config/name="Hunter's Rise"
-config/description="Prototype of a stylized 3D fighting game."
+config/description="A compact 3D fighting-game prototype for Godot 4.x, desktop and mobile."
 run/main_scene="res://main.tscn"
 
 [display]
@@ -17,3 +17,6 @@ environment/defaults/default_clear_color=Color(0.018, 0.02, 0.035, 1)
 
 [gui]
 theme/default_font_multichannel_signed_distance_field=true
+
+[input_devices]
+pointing/emulate_mouse_from_touch=true
