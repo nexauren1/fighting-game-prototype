@@ -355,6 +355,8 @@ func _setup_hud() -> void:
 
 	player_bar = _health_bar(root, Vector2(160, 78), 330, CYAN, false)
 	cpu_bar = _health_bar(root, Vector2(780, 78), 330, PINK, true)
+	player_meter = _meter_bar(root, Vector2(160, 103), 330, PURPLE)
+	cpu_meter = _meter_bar(root, Vector2(780, 103), 330, PURPLE)
 
 	var timer_panel := _panel(root, Vector2(596, 22), Vector2(88, 98), Color(0.03, 0.03, 0.08, 0.95), PURPLE)
 	root.add_child(timer_panel)
@@ -399,6 +401,18 @@ func _panel(parent: Control, pos: Vector2, size: Vector2, bg: Color, accent: Col
 	panel.add_theme_stylebox_override("panel", style)
 	parent.add_child(panel)
 	return panel
+
+func _meter_bar(parent: Control, pos: Vector2, width: float, color: Color) -> ColorRect:
+	var background := ColorRect.new()
+	background.position = pos
+	background.size = Vector2(width, 5)
+	background.color = Color("#17132A")
+	parent.add_child(background)
+	var fill := ColorRect.new()
+	fill.size = background.size
+	fill.color = color
+	background.add_child(fill)
+	return fill
 
 func _health_bar(parent: Control, pos: Vector2, width: float, color: Color, reverse: bool) -> ColorRect:
 	var background := ColorRect.new()
@@ -568,6 +582,7 @@ func _update_hud() -> void:
 	cpu_bar.position.x = 360.0 - cpu_bar.size.x
 	if combo_label:
 		combo_label.text = "COMBO  x%d" % combo_hits if combo_hits > 1 and combo_time > 0.0 else ""
+	combo_stat_label.text = "OVERDRIVE %d%% • %s" % [int(player.overdrive), "ENHANCED SPECIAL" if player.overdrive >= 70.0 else "CHARGE"]
 	timer_label.text = str(int(ceil(round_time)))
 	player_name_label.text = "%s • %03d HP" % [player.fighter_name, int(player.health)]
 	cpu_name_label.text = "%s • %03d HP" % [cpu.fighter_name, int(cpu.health)]
