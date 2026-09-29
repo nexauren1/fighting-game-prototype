@@ -31,6 +31,7 @@ var queued_light := false
 var last_was_light := false
 var overdrive := 0.0
 var enhanced_special := false
+var block_timer := 9.0
 var style_id := 0
 
 const ATTACK_DURATION := [0.30, 0.46, 0.62]
@@ -66,6 +67,8 @@ func _physics_process(delta: float) -> void:
 		combo_stage = 0
 	hit_flash = maxf(0.0, hit_flash - delta)
 	stance_phase += delta * 2.4
+	if blocking:
+		block_timer += delta
 
 	velocity.x = move_toward(velocity.x, 0.0, 18.0 * delta)
 	velocity.z = move_toward(velocity.z, 0.0, 18.0 * delta)
@@ -200,7 +203,17 @@ func take_hit(damage: float, push_direction: Vector3) -> void:
 		blocking = false
 
 func set_block(value: bool) -> void:
-	blocking = value and not knocked_out and not is_attacking() and stun_time <= 0.0
+	var next_block := value and not knocked_out and not is_attacking() and stun_time <= 0.0
+	if next_block and not blocking:
+		block_timer = 0.0
+	blocking = next_block
+
+func is_perfect_block() -> bool:
+	return blocking and block_timer <= 0.16
+
+func trigger_stun(duration: float) -> void:
+	stun_time = maxf(stun_time, duration)
+	reset_combo()
 
 func _build_collision() -> void:
 	var shape_node := CollisionShape3D.new()
