@@ -69,6 +69,7 @@ func _physics_process(delta: float) -> void:
 	combo_time = maxf(0.0, combo_time - delta)
 	if combo_time <= 0.0:
 		combo_hits = 0
+		combo_owner = ""
 	_update_hud()
 
 	if round_time <= 0.0:
@@ -263,12 +264,26 @@ func _check_attack(attacker: CharacterBody3D, target: CharacterBody3D) -> void:
 
 	var push := (target.global_position - attacker.global_position).normalized()
 	push.y = 0.0
-	target.take_hit(attacker.get_attack_damage(), push)
+	var owner := "P1" if attacker == player else "CPU"
+	if combo_owner != owner:
+		combo_hits = 0
+		combo_owner = owner
 	combo_hits += 1
-	combo_time = 0.9
+	combo_time = 0.95
+	var was_blocking := target.blocking
+	var was_attacking := target.is_attacking()
+	target.take_hit(attacker.get_attack_damage(), push)
+	attacker.add_overdrive(8.0 if attacker.attack_kind == 0 else 12.0)
 	camera_shake = 0.20 if attacker.attack_kind >= 1 else 0.12
-	_spawn_hit_effect(target.global_position + Vector3.UP * 1.05, attacker.accent, attacker.attack_kind >= 2)
-	announce.text = "SPECIAL HIT!" if attacker.attack_kind >= 2 else ("HEAVY!" if attacker.attack_kind == 1 else "HIT!")
+	_spawn_hit_effect(target.global_position + Vector3.UP * 1.05, attacker.accent, attacker.attack_kind >= 2 or attacker.get_combo_stage() == 3)
+	if was_blocking:
+		announce.text = "BLOCKED"
+	elif was_attacking:
+		announce.text = "COUNTER!"
+	elif attacker.get_combo_stage() >= 2:
+		announce.text = "COMBO x%d" % combo_hits
+	else:
+		announce.text = "SPECIAL HIT!" if attacker.attack_kind >= 2 else ("HEAVY!" if attacker.attack_kind == 1 else "HIT!")
 	announce.modulate = Color(attacker.accent.r, attacker.accent.g, attacker.accent.b, 1.0)
 
 func _face_each_other() -> void:
