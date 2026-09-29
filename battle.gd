@@ -120,6 +120,26 @@ func _setup_world() -> void:
 	camera.current = true
 	add_child(camera)
 
+
+func _add_city_backdrop() -> void:
+	var texture := load("res://art/arena.svg") as Texture2D
+	if texture == null:
+		return
+	var backdrop := MeshInstance3D.new()
+	backdrop.name = "CityBackdrop"
+	var quad := QuadMesh.new()
+	quad.size = Vector2(28.0, 15.5)
+	backdrop.mesh = quad
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_texture = texture
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	material.roughness = 1.0
+	material.metallic = 0.0
+	backdrop.material_override = material
+	backdrop.position = Vector3(0, 6.0, -12.0)
+	add_child(backdrop)
+
 func _spawn_fighters() -> void:
 	var player_is_rex := selected_player == 0
 	var player_name := "Rex" if player_is_rex else "Zara"
@@ -131,10 +151,12 @@ func _spawn_fighters() -> void:
 
 	player = FighterScene.instantiate() as CharacterBody3D
 	player.setup(player_name, player_accent, player_secondary)
+	player.setup(player_name, player_accent, player_secondary)
 	player.position = Vector3(-3.2, 0.30, 0.0)
 	add_child(player)
 
 	cpu = FighterScene.instantiate() as CharacterBody3D
+	cpu.setup(cpu_name, cpu_accent, cpu_secondary)
 	cpu.setup(cpu_name, cpu_accent, cpu_secondary)
 	cpu.position = Vector3(3.2, 0.30, 0.0)
 	add_child(cpu)
