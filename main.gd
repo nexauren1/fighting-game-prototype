@@ -4,6 +4,7 @@ const FighterScript = preload("res://fighter.gd")
 const BattleScene = preload("res://battle.tscn")
 
 var selected_fighter := 0
+var selected_style := 0
 var root_ui: Control
 
 const BG := Color("#050712")
@@ -118,8 +119,19 @@ func _character_card(x: float, title: String, role: String, accent: Color, index
 	preview.position = Vector2(x + 28, 372)
 	root_ui.add_child(preview)
 
-	var stats := _label("POWER   %s\nSPEED   %s\nSTYLE   %s" % ["A" if index == 1 else "B", "A+" if index == 0 else "B+", "TECH" if index == 0 else "PHASE"], Vector2(x + 270, 385), Vector2(200, 100), 15, MUTED)
+	var stats := _label("POWER   %s\nSPEED   %s\nSTYLE   %s" % ["A" if index == 1 else "B", "A+" if index == 0 else "B+", "TECH" if index == 0 else "PHASE"], Vector2(x + 270, 385), Vector2(200, 88), 14, MUTED)
 	root_ui.add_child(stats)
+	root_ui.add_child(_label("STYLE", Vector2(x + 270, 468), Vector2(90, 18), 10, accent))
+	var style_names := ["VANGUARD", "RUSH", "BREAKER"] if index == 0 else ["PHANTOM", "BLADE", "PULSE"]
+	for style_index in range(3):
+		var style_button := _button(style_names[style_index], Vector2(x + 270 + style_index * 78, 490), Vector2(72, 30), accent if selected_style == style_index and selected_fighter == index else Color("#38405D"))
+		style_button.add_theme_font_size_override("font_size", 10)
+		style_button.pressed.connect(func(si := style_index, fi := index):
+			selected_fighter = fi
+			selected_style = si
+			_show_character_select()
+		)
+		root_ui.add_child(style_button)
 
 	var select := _button("SELECT", Vector2(x + 364, 532), Vector2(126, 38), accent)
 	select.add_theme_font_size_override("font_size", 14)
@@ -221,6 +233,7 @@ func _start_battle() -> void:
 	_clear()
 	var battle = BattleScene.instantiate()
 	battle.selected_player = selected_fighter
+	battle.selected_style = selected_style
 	add_child(battle)
 
 
