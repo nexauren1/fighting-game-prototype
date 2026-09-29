@@ -74,7 +74,7 @@ func _character_card(x: float, title: String, role: String, accent: Color, index
 
 	var select := _button("SELECT", Vector2(x + 364, 532), Vector2(126, 38), accent)
 	select.add_theme_font_size_override("font_size", 14)
-	select.pressed.connect(func(): selected_fighter = index)
+	select.pressed.connect(func(): selected_fighter = index; _show_character_select())
 	root_ui.add_child(select)
 
 	if selected_fighter == index:
@@ -113,6 +113,7 @@ func _make_preview(index: int, accent: Color) -> Control:
 	var fighter = FighterScript.new()
 	fighter.setup("Rex" if index == 0 else "Zara", accent, Color("#6E7CFF") if index == 0 else Color("#FFB84D"))
 	fighter.position.y = 0.02
+	fighter.set_physics_process(false)
 	viewport.add_child(fighter)
 
 	holder.add_child(viewport)
