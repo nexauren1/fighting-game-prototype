@@ -31,15 +31,17 @@ var queued_light := false
 var last_was_light := false
 var overdrive := 0.0
 var enhanced_special := false
+var style_id := 0
 
 const ATTACK_DURATION := [0.30, 0.46, 0.62]
 const ATTACK_DAMAGE := [8.0, 16.0, 24.0]
 const ATTACK_RANGE := [1.55, 1.80, 2.10]
 
-func setup(name_value: String, accent_value: Color, secondary_value: Color) -> void:
+func setup(name_value: String, accent_value: Color, secondary_value: Color, style_value: int = 0) -> void:
 	fighter_name = name_value
 	accent = accent_value
 	secondary = secondary_value
+	style_id = clampi(style_value, 0, 2)
 	_build_collision()
 	_build_model()
 
@@ -69,6 +71,23 @@ func _physics_process(delta: float) -> void:
 	velocity.z = move_toward(velocity.z, 0.0, 18.0 * delta)
 	move_and_slide()
 	_animate(delta)
+
+func set_style(value: int) -> void:
+	style_id = clampi(value, 0, 2)
+
+func get_style_label() -> String:
+	if fighter_name == "Rex":
+		return ["VANGUARD", "RUSH", "BREAKER"][style_id]
+	return ["PHANTOM", "BLADE", "PULSE"][style_id]
+
+func get_style_speed(base_speed: float) -> float:
+	return base_speed * [1.0, 1.18, 0.86][style_id]
+
+func get_style_damage(base_damage: float) -> float:
+	return base_damage * [1.0, 0.88, 1.22][style_id]
+
+func get_style_reach(base_reach: float) -> float:
+	return base_reach * [1.0, 0.96, 1.10][style_id]
 
 func set_move(direction: Vector2, speed: float) -> void:
 	if knocked_out or stun_time > 0.0 or is_attacking():
@@ -154,15 +173,15 @@ func get_attack_damage() -> float:
 	if attack_kind < 0:
 		return 0.0
 	if attack_kind == 0:
-		return [8.0, 10.0, 15.0][maxi(combo_stage - 1, 0)] * (1.0 + overdrive * 0.0015)
-	return ATTACK_DAMAGE[attack_kind] * (1.12 if overdrive >= 70.0 else 1.0)
+		return [8.0, 10.0, 15.0][maxi(combo_stage - 1, 0)] * (1.0 + overdrive * 0.0015) * [1.0, 0.92, 1.18][style_id]
+	return ATTACK_DAMAGE[attack_kind] * (1.12 if overdrive >= 70.0 else 1.0) * [1.0, 0.92, 1.22][style_id]
 
 func get_attack_range() -> float:
 	if attack_kind < 0:
 		return 0.0
 	if attack_kind == 0:
-		return [1.50, 1.62, 1.86][maxi(combo_stage - 1, 0)]
-	return ATTACK_RANGE[attack_kind]
+		return [1.50, 1.62, 1.86][maxi(combo_stage - 1, 0)] * [1.0, 0.96, 1.10][style_id]
+	return ATTACK_RANGE[attack_kind] * [1.0, 0.96, 1.10][style_id]
 
 func take_hit(damage: float, push_direction: Vector3) -> void:
 	if knocked_out:
@@ -285,7 +304,7 @@ func _animate(_delta: float) -> void:
 			arm_l.rotation.z = 1.20 * swing
 			arm_r.rotation.z = -1.20 * swing
 			body_core.rotation.z = -0.10 * swing
-			body_core.scale = Vector3.ONE * (1.0 + 0.06 * swing)
+			body_core.scale = Vector3.ONE * (1.0 + (0.11 if style_id == 2 else 0.06) * swing)
 	elif stun_time > 0.0:
 		var recoil := sin(stun_time * 24.0) * 0.10
 		body_core.rotation.x = recoil
@@ -294,13 +313,13 @@ func _animate(_delta: float) -> void:
 		leg_l.rotation.x = -0.10
 		leg_r.rotation.x = 0.12
 	elif move_amount > 0.1:
-		var step := sin(t * 3.0) * 0.12
+		var step := sin(t * (3.8 if style_id == 1 else 3.0)) * 0.12
 		leg_l.rotation.x = step
 		leg_r.rotation.x = -step
 		arm_l.rotation.x = -step * 0.7
 		arm_r.rotation.x = step * 0.7
 	else:
-		var bounce := sin(stance_phase) * 0.035
+		var bounce := sin(stance_phase * (1.35 if style_id == 1 else 1.0)) * 0.035
 		body_core.position.y = bounce
 		body_core.rotation.x = -0.035
 		arm_l.rotation.z = 0.28 + sin(stance_phase) * 0.05
