@@ -1,4 +1,5 @@
 extends Control
+signal flicked(direction: Vector2)
 
 var value := Vector2.ZERO
 var radius := 88.0
@@ -9,6 +10,7 @@ var pointer_id := -1
 var last_input := Vector2.ZERO
 var return_speed := 11.0
 var pulse := 0.0
+var touch_start_time := 0.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -29,6 +31,7 @@ func _gui_input(event: InputEvent) -> void:
 		if touch.pressed and not active:
 			active = true
 			pointer_id = touch.index
+			touch_start_time = Time.get_ticks_msec() * 0.001
 			_set_value(touch.position)
 			accept_event()
 		elif not touch.pressed and active and touch.index == pointer_id:
@@ -37,7 +40,12 @@ func _gui_input(event: InputEvent) -> void:
 	elif event is InputEventScreenDrag:
 		var drag := event as InputEventScreenDrag
 		if active and drag.index == pointer_id:
+			var before := value
 			_set_value(drag.position)
+			var elapsed := Time.get_ticks_msec() * 0.001 - touch_start_time
+			if elapsed < 0.22 and value.length() > 0.82 and before.length() < 0.55:
+				flicked.emit(value.normalized())
+				touch_start_time = -99.0
 			accept_event()
 	elif event is InputEventMouseButton:
 		var mouse := event as InputEventMouseButton
