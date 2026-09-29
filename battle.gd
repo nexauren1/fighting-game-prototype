@@ -26,6 +26,12 @@ var timer_label: Label
 var announce: Label
 var player_name_label: Label
 var cpu_name_label: Label
+var combo_label: Label
+var player_portrait: TextureRect
+var cpu_portrait: TextureRect
+var camera_shake := 0.0
+var combo_hits := 0
+var combo_time := 0.0
 
 const CYAN := Color("#58E7FF")
 const PINK := Color("#FF5EC4")
@@ -56,6 +62,9 @@ func _physics_process(delta: float) -> void:
 	_update_cpu(delta)
 	_update_fighters(delta)
 	_update_camera(delta)
+	combo_time = maxf(0.0, combo_time - delta)
+	if combo_time <= 0.0:
+		combo_hits = 0
 	_update_hud()
 
 	if round_time <= 0.0:
@@ -151,12 +160,10 @@ func _spawn_fighters() -> void:
 
 	player = FighterScene.instantiate() as CharacterBody3D
 	player.setup(player_name, player_accent, player_secondary)
-	player.setup(player_name, player_accent, player_secondary)
 	player.position = Vector3(-3.2, 0.30, 0.0)
 	add_child(player)
 
 	cpu = FighterScene.instantiate() as CharacterBody3D
-	cpu.setup(cpu_name, cpu_accent, cpu_secondary)
 	cpu.setup(cpu_name, cpu_accent, cpu_secondary)
 	cpu.position = Vector3(3.2, 0.30, 0.0)
 	add_child(cpu)
@@ -253,6 +260,12 @@ func _check_attack(attacker: CharacterBody3D, target: CharacterBody3D) -> void:
 	var push := (target.global_position - attacker.global_position).normalized()
 	push.y = 0.0
 	target.take_hit(attacker.get_attack_damage(), push)
+	combo_hits += 1
+	combo_time = 0.9
+	camera_shake = 0.20 if attacker.attack_kind >= 1 else 0.12
+	_spawn_hit_effect(target.global_position + Vector3.UP * 1.05, attacker.accent, attacker.attack_kind >= 2)
+	announce.text = "SPECIAL HIT!" if attacker.attack_kind >= 2 else ("HEAVY!" if attacker.attack_kind == 1 else "HIT!")
+	announce.modulate = Color(attacker.accent.r, attacker.accent.g, attacker.accent.b, 1.0)
 
 func _face_each_other() -> void:
 	if is_instance_valid(player) and is_instance_valid(cpu):
@@ -291,7 +304,10 @@ func _update_camera(delta: float) -> void:
 	var midpoint := (player.position + cpu.position) * 0.5
 	var separation := player.position.distance_to(cpu.position)
 	var target := Vector3(midpoint.x * 0.12, 4.8, clampf(12.0 + separation * 0.45, 12.0, 16.8))
-	camera.position = camera.position.lerp(target, clampf(delta * 3.0, 0.0, 1.0))
+	if camera_shake > 0.0:
+		target += Vector3(randf_range(-camera_shake, camera_shake), randf_range(-camera_shake * 0.45, camera_shake * 0.45), 0.0)
+		camera_shake = maxf(0.0, camera_shake - delta * 1.5)
+	camera.position = camera.position.lerp(target, clampf(delta * 4.0, 0.0, 1.0))
 	camera.look_at(Vector3(midpoint.x, 1.3, 0.0), Vector3.UP)
 
 func _setup_hud() -> void:
@@ -302,34 +318,82 @@ func _setup_hud() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(root)
 
-	var title := _label("NEON DISTRICT", Vector2(28, 20), Vector2(300, 30), 18, WHITE)
-	root.add_child(title)
-	var back := _button("HOME", Vector2(28, 52), Vector2(90, 34), Color("#3D4568"))
-	back.pressed.connect(func(): get_tree().change_scene_to_file("res://main.tscn"))
-	root.add_child(back)
+	var top_left := _panel(root, Vector2(26, 24), Vector2(530, 116), Color(0.02, 0.04, 0.09, 0.80), CYAN)
+	var top_right := _panel(root, Vector2(724, 24), Vector2(530, 116), Color(0.02, 0.04, 0.09, 0.80), PINK)
+	root.add_child(top_left)
+	root.add_child(top_right)
 
-	root.add_child(_label("PLAYER", Vector2(38, 98), Vector2(120, 22), 11, CYAN))
-	player_name_label = _label("", Vector2(38, 122), Vector2(460, 26), 14, WHITE)
+	player_portrait = _portrait(root, "res://art/rex.svg", Vector2(38, 34))
+	cpu_portrait = _portrait(root, "res://art/zara.svg", Vector2(1154, 34))
+	root.add_child(player_portrait)
+	root.add_child(cpu_portrait)
+
+	player_name_label = _label("", Vector2(160, 40), Vector2(340, 28), 21, WHITE)
 	root.add_child(player_name_label)
-
-	root.add_child(_label("CPU", Vector2(1008, 98), Vector2(90, 22), 11, PINK))
-	cpu_name_label = _label("", Vector2(760, 122), Vector2(460, 26), 14, WHITE)
+	cpu_name_label = _label("", Vector2(780, 40), Vector2(340, 28), 21, WHITE)
 	cpu_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	root.add_child(cpu_name_label)
 
-	player_bar = _health_bar(root, Vector2(38, 154), 360, CYAN)
-	cpu_bar = _health_bar(root, Vector2(882, 154), 360, PINK)
+	player_bar = _health_bar(root, Vector2(160, 78), 330, CYAN, false)
+	cpu_bar = _health_bar(root, Vector2(780, 78), 330, PINK, true)
 
-	timer_label = _label("60", Vector2(595, 99), Vector2(90, 50), 30, WHITE)
+	var timer_panel := _panel(root, Vector2(596, 22), Vector2(88, 98), Color(0.03, 0.03, 0.08, 0.95), PURPLE)
+	root.add_child(timer_panel)
+	timer_label = _label("60", Vector2(600, 37), Vector2(80, 50), 38, WHITE)
 	timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(timer_label)
+	root.add_child(_label("ROUND 01", Vector2(600, 82), Vector2(80, 18), 9, MUTED))
 
-	announce = _label("READY", Vector2(285, 278), Vector2(710, 90), 34, WHITE)
+	combo_label = _label("", Vector2(520, 204), Vector2(240, 64), 24, WHITE)
+	combo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	root.add_child(combo_label)
+
+	announce = _label("READY", Vector2(280, 278), Vector2(720, 84), 36, WHITE)
 	announce.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(announce)
 
-	root.add_child(_label("Keyboard: WASD move • F/G/H attacks • R block • T dash", Vector2(30, 680), Vector2(650, 22), 11, MUTED))
-	root.add_child(_label("Mobile: analog + 4 buttons", Vector2(985, 680), Vector2(260, 22), 11, MUTED))
+	root.add_child(_label("NEON DISTRICT  •  NEXAR BATTLE ARENA", Vector2(28, 680), Vector2(500, 22), 11, MUTED))
+	root.add_child(_label("WASD / F G H / R / T", Vector2(1070, 680), Vector2(190, 22), 11, MUTED))
+
+func _portrait(parent: Control, path: String, pos: Vector2) -> TextureRect:
+	var portrait := TextureRect.new()
+	portrait.texture = load(path)
+	portrait.position = pos
+	portrait.size = Vector2(104, 104)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return portrait
+
+func _panel(parent: Control, pos: Vector2, size: Vector2, bg: Color, accent: Color) -> Panel:
+	var panel := Panel.new()
+	panel.position = pos
+	panel.size = size
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg
+	style.border_color = Color(accent.r, accent.g, accent.b, 0.55)
+	style.set_border_width_all(2)
+	style.corner_radius_top_left = 14
+	style.corner_radius_top_right = 14
+	style.corner_radius_bottom_left = 14
+	style.corner_radius_bottom_right = 14
+	panel.add_theme_stylebox_override("panel", style)
+	parent.add_child(panel)
+	return panel
+
+func _health_bar(parent: Control, pos: Vector2, width: float, color: Color, reverse: bool) -> ColorRect:
+	var background := ColorRect.new()
+	background.position = pos
+	background.size = Vector2(width, 20)
+	background.color = Color("#111827")
+	parent.add_child(background)
+	var fill := ColorRect.new()
+	fill.size = background.size
+	fill.color = color
+	background.add_child(fill)
+	fill.set_meta("background_width", width)
+	fill.set_meta("reverse", reverse)
+	return fill
 
 func _setup_touch_controls() -> void:
 	var layer := CanvasLayer.new()
@@ -345,19 +409,17 @@ func _setup_touch_controls() -> void:
 	joystick.mouse_filter = Control.MOUSE_FILTER_STOP
 	mobile_root.add_child(joystick)
 
-	_create_action_button("LIGHT", 0, Color("#58E7FF"), func(): _player_attack(0))
-	_create_action_button("HEAVY", 1, Color("#8A7CFF"), func(): _player_attack(1))
-	_create_action_button("SPECIAL", 2, Color("#FF5EC4"), func(): _player_attack(2))
+	_create_action_button("✦\nLIGHT", 0, CYAN, func(): _player_attack(0))
+	_create_action_button("✺\nHEAVY", 1, PURPLE, func(): _player_attack(1))
+	_create_action_button("⚡\nSPECIAL", 2, PINK, func(): _player_attack(2))
 	_create_block_button()
-
 	_layout_touch_controls()
-
 func _create_action_button(text_value: String, index: int, color: Color, action: Callable) -> void:
 	var button := Button.new()
 	button.text = text_value
 	button.name = "Action" + str(index)
-	button.size = Vector2(100, 70)
-	button.add_theme_font_size_override("font_size", 12)
+	button.size = Vector2(88, 76)
+	button.add_theme_font_size_override("font_size", 13)
 	button.add_theme_color_override("font_color", WHITE)
 	_style_touch_button(button, color)
 	button.button_down.connect(action)
@@ -366,10 +428,10 @@ func _create_action_button(text_value: String, index: int, color: Color, action:
 
 func _create_block_button() -> void:
 	var button := Button.new()
-	button.text = "BLOCK"
+	button.text = "⬡\nBLOCK"
 	button.name = "Block"
-	button.size = Vector2(100, 70)
-	button.add_theme_font_size_override("font_size", 12)
+	button.size = Vector2(88, 76)
+	button.add_theme_font_size_override("font_size", 13)
 	button.add_theme_color_override("font_color", WHITE)
 	_style_touch_button(button, Color("#4E607E"))
 	button.button_down.connect(func(): block_held = true)
@@ -381,10 +443,10 @@ func _style_touch_button(button: Button, color: Color) -> void:
 	normal.bg_color = Color(color.r, color.g, color.b, 0.18)
 	normal.border_color = Color(color.r, color.g, color.b, 0.75)
 	normal.set_border_width_all(2)
-	normal.corner_radius_top_left = 18
-	normal.corner_radius_top_right = 18
-	normal.corner_radius_bottom_left = 18
-	normal.corner_radius_bottom_right = 18
+	normal.corner_radius_top_left = 44
+	normal.corner_radius_top_right = 44
+	normal.corner_radius_bottom_left = 44
+	normal.corner_radius_bottom_right = 44
 	var pressed := normal.duplicate()
 	pressed.bg_color = Color(color.r, color.g, color.b, 0.38)
 	button.add_theme_stylebox_override("normal", normal)
@@ -394,16 +456,15 @@ func _style_touch_button(button: Button, color: Color) -> void:
 func _process(_delta: float) -> void:
 	_layout_touch_controls()
 
-func _layout_touch_controls() -> void:
-	if mobile_root == null or joystick == null:
+func _spawn_hit_effect	if mobile_root == null or joystick == null:
 		return
 	var size := get_viewport().get_visible_rect().size
 	joystick.position = Vector2(34, size.y - 208)
 
 	var buttons := mobile_root.get_children()
-	var start_x := size.x - 450.0
-	var y := size.y - 202.0
-	var gap := 112.0
+	var start_x := size.x - 390.0
+	var y := size.y - 175.0
+	var gap := 96.0
 
 	var action0 := mobile_root.get_node_or_null("Action0")
 	var action1 := mobile_root.get_node_or_null("Action1")
@@ -413,18 +474,20 @@ func _layout_touch_controls() -> void:
 	if action0:
 		action0.position = Vector2(start_x, y)
 	if action1:
-		action1.position = Vector2(start_x + gap, y - 52)
+		action1.position = Vector2(start_x + gap, y - 46)
 	if action2:
 		action2.position = Vector2(start_x + gap * 2.0, y)
 	if block:
-		block.position = Vector2(start_x + gap * 3.0, y - 52)
+		block.position = Vector2(start_x + gap * 3.0, y - 46)
 
 func _update_hud() -> void:
 	if not is_instance_valid(player_bar) or not is_instance_valid(cpu_bar):
 		return
 	player_bar.size.x = 360.0 * player.health / player.max_health
 	cpu_bar.size.x = 360.0 * cpu.health / cpu.max_health
-	cpu_bar.position.x = 1242.0 - cpu_bar.size.x
+	cpu_bar.position.x = 360.0 - cpu_bar.size.x
+	if combo_label:
+		combo_label.text = "COMBO  x%d" % combo_hits if combo_hits > 1 and combo_time > 0.0 else ""
 	timer_label.text = str(int(ceil(round_time)))
 	player_name_label.text = "%s • %03d HP" % [player.fighter_name, int(player.health)]
 	cpu_name_label.text = "%s • %03d HP" % [cpu.fighter_name, int(cpu.health)]
