@@ -464,6 +464,9 @@ func _create_action_button(text_value: String, index: int, color: Color, action:
 	button.add_theme_color_override("font_color", WHITE)
 	_style_touch_button(button, color)
 	button.button_down.connect(action)
+	button.button_down.connect(func(): _touch_down_feedback(button))
+	button.button_up.connect(func(): _touch_up_feedback(button))
+	button.pivot_offset = button.size * 0.5
 	mobile_root.add_child(button)
 	button.set_meta("touch_index", index)
 
@@ -476,8 +479,19 @@ func _create_block_button() -> void:
 	button.add_theme_color_override("font_color", WHITE)
 	_style_touch_button(button, Color("#4E607E"))
 	button.button_down.connect(func(): block_held = true)
+	button.button_down.connect(func(): _touch_down_feedback(button))
 	button.button_up.connect(func(): block_held = false)
+	button.button_up.connect(func(): _touch_up_feedback(button))
+	button.pivot_offset = button.size * 0.5
 	mobile_root.add_child(button)
+
+func _touch_down_feedback(button: Button) -> void:
+	var tween := button.create_tween()
+	tween.tween_property(button, "scale", Vector2(0.90, 0.90), 0.06).set_trans(Tween.TRANS_QUAD)
+
+func _touch_up_feedback(button: Button) -> void:
+	var tween := button.create_tween()
+	tween.tween_property(button, "scale", Vector2.ONE, 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _style_touch_button(button: Button, color: Color) -> void:
 	var normal := StyleBoxFlat.new()
