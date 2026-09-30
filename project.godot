@@ -1,6 +1,6 @@
 [application]
-config/name="Hunter's Rise"
-config/description="A compact 3D fighting-game prototype for Godot 4.x, desktop and mobile."
+config/name="Nexauren Story: Neon District"
+config/description="Nexauren Story original 3D melee fighting prototype — Rex vs Zara in Neon District."
 run/main_scene="res://main.tscn"
 
 [display]
