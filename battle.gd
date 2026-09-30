@@ -37,6 +37,7 @@ var combo_owner := ""
 var player_meter: ColorRect
 var cpu_meter: ColorRect
 var combo_stat_label: Label
+var win_screen_shown := false
 
 const CYAN := Color("#58E7FF")
 const PINK := Color("#FF5EC4")
@@ -93,11 +94,11 @@ func _input(event: InputEvent) -> void:
 
 	if key.keycode == KEY_F or key.keycode == KEY_X:
 		_player_attack(0)
-	elif key.keycode == KEY_G:
+	elif key.keycode == KEY_G or key.keycode == KEY_Y:
 		_player_attack(1)
-	elif key.keycode == KEY_H:
+	elif key.keycode == KEY_H or key.keycode == KEY_B:
 		_player_attack(2)
-	elif key.keycode == KEY_R:
+	elif key.keycode == KEY_R or key.keycode == KEY_A:
 		block_held = true
 	elif key.keycode == KEY_T:
 		_player_dash()
@@ -397,7 +398,7 @@ func _setup_hud() -> void:
 	root.add_child(announce)
 
 	root.add_child(_label("NEON DISTRICT  •  NEXAR BATTLE ARENA", Vector2(28, 680), Vector2(500, 22), 11, MUTED))
-	root.add_child(_label("X / Y / B / A  •  MOVE / ATTACK / BLOCK", Vector2(920, 680), Vector2(330, 22), 11, MUTED))
+	root.add_child(_label("X LIGHT  •  Y HEAVY  •  B SPECIAL  •  A BLOCK", Vector2(820, 680), Vector2(430, 22), 11, MUTED))
 
 func _portrait(parent: Control, path: String, pos: Vector2) -> TextureRect:
 	var portrait := TextureRect.new()
@@ -618,7 +619,10 @@ func _update_hud() -> void:
 	var bar_width := 330.0
 	player_bar.size.x = bar_width * player.health / player.max_health
 	cpu_bar.size.x = bar_width * cpu.health / cpu.max_health
-	cpu_bar.position.x = 1110.0 + (bar_width - cpu_bar.size.x)
+	cpu_bar.position.x = bar_width - cpu_bar.size.x
+	player_meter.size.x = bar_width * player.overdrive / 100.0
+	cpu_meter.size.x = bar_width * cpu.overdrive / 100.0
+	cpu_meter.position.x = bar_width - cpu_meter.size.x
 	if combo_label:
 		combo_label.text = "COMBO  x%d" % combo_hits if combo_hits > 1 and combo_time > 0.0 else ""
 	combo_stat_label.text = "OVERDRIVE %d%% • %s" % [int(player.overdrive), "ENHANCED SPECIAL" if player.overdrive >= 70.0 else "CHARGE"]
@@ -631,7 +635,97 @@ func _end_message(text_value: String) -> void:
 	if round_over:
 		return
 	round_over = true
-	announce.text = text_value + "\nENTER = REMATCH • ESC = HOME"
+	announce.text = text_value
+	_show_win_screen(text_value)
+
+func _show_win_screen(result_text: String) -> void:
+	if win_screen_shown:
+		return
+	win_screen_shown = true
+	var layer := CanvasLayer.new()
+	layer.name = "WinScreen"
+	add_child(layer)
+
+	var shade := ColorRect.new()
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.color = Color(0.01, 0.02, 0.06, 0.86)
+	layer.add_child(shade)
+
+	var panel := Panel.new()
+	panel.position = Vector2(310, 115)
+	panel.size = Vector2(660, 500)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#080D1A")
+	style.border_color = CYAN if result_text.begins_with(player.fighter_name) else PINK
+	style.set_border_width_all(2)
+	style.corner_radius_top_left = 24
+	style.corner_radius_top_right = 24
+	style.corner_radius_bottom_left = 24
+	style.corner_radius_bottom_right = 24
+	panel.add_theme_stylebox_override("panel", style)
+	layer.add_child(panel)
+
+	var winner_is_player := result_text.begins_with(player.fighter_name)
+	var winner_color := CYAN if winner_is_player else PINK
+	var winner_name := player.fighter_name if winner_is_player else cpu.fighter_name
+	var winner_art := "res://art/rex.svg" if winner_name == "Rex" else "res://art/zara.svg"
+
+	var badge := Label.new()
+	badge.text = "NEXAUREN / NEON DISTRICT"
+	badge.position = Vector2(48, 30)
+	badge.size = Vector2(560, 24)
+	badge.add_theme_font_size_override("font_size", 11)
+	badge.add_theme_color_override("font_color", winner_color)
+	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel.add_child(badge)
+
+	var title := Label.new()
+	title.text = "VICTORY" if winner_name != "DRAW" else "DRAW"
+	title.position = Vector2(40, 70)
+	title.size = Vector2(580, 72)
+	title.add_theme_font_size_override("font_size", 58)
+	title.add_theme_color_override("font_color", WHITE)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel.add_child(title)
+
+	var portrait := TextureRect.new()
+	portrait.texture = load(winner_art)
+	portrait.position = Vector2(205, 148)
+	portrait.size = Vector2(250, 190)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.modulate = Color(1, 1, 1, 0.95)
+	panel.add_child(portrait)
+
+	var winner_label := Label.new()
+	winner_label.text = winner_name + ("  •  " + player.get_style_label() if winner_is_player else "  •  CPU")
+	winner_label.position = Vector2(40, 342)
+	winner_label.size = Vector2(580, 38)
+	winner_label.add_theme_font_size_override("font_size", 26)
+	winner_label.add_theme_color_override("font_color", winner_color)
+	winner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel.add_child(winner_label)
+
+	var result_label := Label.new()
+	result_label.text = "Rex vs Zara  •  CLOSE-RANGE MELEE"
+	result_label.position = Vector2(40, 382)
+	result_label.size = Vector2(580, 24)
+	result_label.add_theme_font_size_override("font_size", 12)
+	result_label.add_theme_color_override("font_color", MUTED)
+	result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel.add_child(result_label)
+
+	var rematch := _button("REMATCH", Vector2(90, 430), Vector2(220, 52), winner_color)
+	rematch.pressed.connect(func():
+		var host := get_parent()
+		if host and host.has_method("_start_battle"):
+			host.call_deferred("_start_battle")
+	)
+	panel.add_child(rematch)
+
+	var home := _button("HOME", Vector2(350, 430), Vector2(220, 52), Color("#465273"))
+	home.pressed.connect(func(): get_tree().change_scene_to_file("res://main.tscn"))
+	panel.add_child(home)
 
 func _finish_round() -> void:
 	if player.health > cpu.health:
