@@ -296,7 +296,7 @@ func _apply_attack_motion() -> void:
 		return
 	var progress := 1.0 - attack_time / attack_duration
 	if progress < 0.28:
-		var lunge := LUNGE_DISTANCE[attack_kind]
+		var lunge: float = LUNGE_DISTANCE[attack_kind]
 		var direction := -global_transform.basis.z.normalized()
 		global_position += direction * (lunge * 0.34)
 		attack_lunge_done = true
