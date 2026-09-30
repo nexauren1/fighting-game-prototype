@@ -1,0 +1,42 @@
+name: Godot web preview
+
+on:
+  push:
+    branches:
+      - "feature/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.2
+          use-dotnet: false
+
+      - name: Export Web build
+        run: |
+          mkdir -p build/web
+          godot --headless --path . --editor --quit
+          godot --headless --path . --export-release "Web" build/web/index.html
+
+      - name: Package preview
+        run: |
+          cd build/web
+          zip -r ../../neon-district-web.zip .
+
+      - name: Upload Web preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: neon-district-web-preview
+          path: neon-district-web.zip
+          retention-days: 14
