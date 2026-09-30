@@ -2,7 +2,7 @@
   "schema":"game-room.milestone-reviews.v1",
   "room_id":"neon-district-v2",
   "function":{
-    "status":"pending_human_approval",
+    "status":"approved_by_user_2026-09-30",
     "paid_meshy_work_allowed":false,
     "checks":{
       "purpose_declared":true,
@@ -19,7 +19,7 @@
     }
   },
   "form":{
-    "status":"blocked_until_function_approval"
+    "status":"in_progress"
   },
   "runtime":{
     "status":"blocked_until_form_approval"
