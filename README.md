@@ -86,3 +86,22 @@ Godot Button supports multitouch input, and touch emulation can be enabled for d
 ## Godot version
 
 The project targets Godot 4.x and the CI check uses Godot 4.7.2, a stable release in the official Godot archive.
+
+
+## First playable test
+
+The current prototype builds as a Godot Web export through GitHub Actions.
+
+Combat loop:
+- Move with the virtual analog or WASD.
+- X / LIGHT chains up to a three-hit melee combo.
+- Y / HEAVY delivers a stronger close-range strike.
+- B / SPECIAL triggers each fighter's signature melee animation and can consume Overdrive.
+- A / BLOCK reduces incoming damage and supports the perfect-block counter window.
+- Tapping/flicking the analog can dash toward the opponent.
+- The CPU closes distance and attacks automatically.
+
+Build artifact:
+- GitHub Actions workflow: `Godot web preview`
+- The generated artifact is named `neon-district-web-preview`.
+- The current artifact is a Web build exported with Godot 4.7.2.
