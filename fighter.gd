@@ -184,7 +184,7 @@ func get_attack_damage() -> float:
 		return 0.0
 	if attack_kind == 0:
 		return [8.0, 10.0, 15.0][maxi(combo_stage - 1, 0)] * (1.0 + overdrive * 0.0015) * [1.0, 0.92, 1.18][style_id]
-	return ATTACK_DAMAGE[attack_kind] * (1.12 if overdrive >= 70.0 else 1.0) * [1.0, 0.92, 1.22][style_id]
+	return ATTACK_DAMAGE[attack_kind] * (1.12 if enhanced_special else 1.0) * [1.0, 0.92, 1.22][style_id]
 
 func get_attack_range() -> float:
 	if attack_kind < 0:
@@ -314,6 +314,10 @@ func _animate(_delta: float) -> void:
 	visual.rotation.z = 0.0
 	body_core.rotation = Vector3.ZERO
 	body_core.scale = Vector3.ONE
+
+	if hit_flash > 0.0 and not knocked_out:
+		var flash_pulse := 1.0 + sin((hit_flash / 0.14) * PI) * 0.10
+		visual.scale = Vector3.ONE * flash_pulse
 
 	if knocked_out:
 		body_core.rotation.z = -1.15
