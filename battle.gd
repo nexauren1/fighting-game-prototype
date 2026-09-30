@@ -397,7 +397,7 @@ func _setup_hud() -> void:
 	announce.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(announce)
 
-	root.add_child(_label("NEON DISTRICT  •  NEXAR BATTLE ARENA", Vector2(28, 680), Vector2(500, 22), 11, MUTED))
+	root.add_child(_label("NEON DISTRICT  •  NEXAUREN BATTLE ARENA", Vector2(28, 680), Vector2(500, 22), 11, MUTED))
 	root.add_child(_label("WASD MOVE  •  X LIGHT  •  Y HEAVY  •  B SPECIAL  •  R BLOCK", Vector2(760, 680), Vector2(490, 22), 11, MUTED))
 
 func _portrait(parent: Control, path: String, pos: Vector2) -> TextureRect:
