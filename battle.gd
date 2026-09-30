@@ -131,7 +131,7 @@ func _setup_world() -> void:
 
 	camera = Camera3D.new()
 	camera.fov = 48.0
-	camera.position = Vector3(0, 5.0, 13.5)
+	camera.position = ArenaScript.CAMERA_POSITION
 	camera.current = true
 	add_child(camera)
 
@@ -166,12 +166,12 @@ func _spawn_fighters() -> void:
 
 	player = FighterScene.instantiate() as CharacterBody3D
 	player.setup(player_name, player_accent, player_secondary, selected_style)
-	player.position = Vector3(-3.2, 0.30, 0.0)
+	player.position = ArenaScript.PLAYER_SPAWN
 	add_child(player)
 
 	cpu = FighterScene.instantiate() as CharacterBody3D
 	cpu.setup(cpu_name, cpu_accent, cpu_secondary, (selected_style + 1) % 3)
-	cpu.position = Vector3(3.2, 0.30, 0.0)
+	cpu.position = ArenaScript.CPU_SPAWN
 	add_child(cpu)
 
 	player.rotation.y = PI * 0.5
@@ -201,8 +201,8 @@ func _update_player(delta: float) -> void:
 	if player.position.y < 0.30:
 		player.position.y = 0.30
 
-	player.position.x = clampf(player.position.x, -8.3, 8.3)
-	player.position.z = clampf(player.position.z, -3.1, 3.1)
+	player.position.x = clampf(player.position.x, ArenaScript.COMBAT_X_MIN, ArenaScript.COMBAT_X_MAX)
+	player.position.z = clampf(player.position.z, ArenaScript.COMBAT_Z_MIN, ArenaScript.COMBAT_Z_MAX)
 
 func _update_cpu(_delta: float) -> void:
 	if not is_instance_valid(cpu) or cpu.knocked_out:
@@ -228,8 +228,8 @@ func _update_cpu(_delta: float) -> void:
 	else:
 		cpu.set_block(false)
 
-	cpu.position.x = clampf(cpu.position.x, -8.3, 8.3)
-	cpu.position.z = clampf(cpu.position.z, -3.1, 3.1)
+	cpu.position.x = clampf(cpu.position.x, ArenaScript.COMBAT_X_MIN, ArenaScript.COMBAT_X_MAX)
+	cpu.position.z = clampf(cpu.position.z, ArenaScript.COMBAT_Z_MIN, ArenaScript.COMBAT_Z_MAX)
 
 	_face_each_other()
 
@@ -329,8 +329,8 @@ func _player_dash(direction_hint: Vector3 = Vector3.ZERO) -> void:
 		direction.x = 1.0 if player.position.x < cpu.position.x else -1.0
 	direction = direction.normalized()
 	player.position += direction * 1.4
-	player.position.x = clampf(player.position.x, -8.3, 8.3)
-	player.position.z = clampf(player.position.z, -3.1, 3.1)
+	player.position.x = clampf(player.position.x, ArenaScript.COMBAT_X_MIN, ArenaScript.COMBAT_X_MAX)
+	player.position.z = clampf(player.position.z, ArenaScript.COMBAT_Z_MIN, ArenaScript.COMBAT_Z_MAX)
 
 func _update_camera(delta: float) -> void:
 	if not is_instance_valid(camera):
