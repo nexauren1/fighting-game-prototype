@@ -4,6 +4,14 @@ const CYAN := Color("#58E7FF")
 const PINK := Color("#FF5EC4")
 const PURPLE := Color("#B86CFF")
 
+const COMBAT_X_MIN := -8.3
+const COMBAT_X_MAX := 8.3
+const COMBAT_Z_MIN := -3.1
+const COMBAT_Z_MAX := 3.1
+const PLAYER_SPAWN := Vector3(-3.2, 0.30, 0.0)
+const CPU_SPAWN := Vector3(3.2, 0.30, 0.0)
+const CAMERA_POSITION := Vector3(0.0, 5.0, 13.5)
+
 func build() -> void:
 	_build_materials()
 	_build_floor()
@@ -117,14 +125,14 @@ func _build_props() -> void:
 	ring.material_override = mat_cyan
 	add_child(ring)
 
-		for x in [-8.5, -4.2, 4.2, 8.5]:
+	for x in [-8.5, -4.2, 4.2, 8.5]:
 		_add_box("Pillar", Vector3(x, 1.4, -3.6), Vector3(0.18, 2.4, 0.18), mat_metal)
 		_add_box("PillarLight", Vector3(x, 2.65, -3.6), Vector3(0.26, 0.08, 0.26), mat_cyan if x < 0 else mat_pink)
 
-	_add_box("ObstacleA", Vector3(-6.0, 0.58, 1.75), Vector3(2.6, 0.64, 0.70), mat_metal)
-	_add_box("ObstacleALight", Vector3(-6.0, 0.93, 1.39), Vector3(2.1, 0.04, 0.05), mat_cyan)
-	_add_box("ObstacleB", Vector3(5.0, 0.56, -1.70), Vector3(3.1, 0.58, 0.66), mat_metal)
-	_add_box("ObstacleBLight", Vector3(5.0, 0.88, -2.05), Vector3(2.5, 0.04, 0.05), mat_pink)
+	_add_box("ObstacleA", Vector3(-6.0, 0.58, 4.80), Vector3(2.6, 0.64, 0.70), mat_metal)
+	_add_box("ObstacleALight", Vector3(-6.0, 0.93, 4.44), Vector3(2.1, 0.04, 0.05), mat_cyan)
+	_add_box("ObstacleB", Vector3(5.0, 0.56, -4.80), Vector3(3.1, 0.58, 0.66), mat_metal)
+	_add_box("ObstacleBLight", Vector3(5.0, 0.88, -4.44), Vector3(2.5, 0.04, 0.05), mat_pink)
 
 	for x in [-8.0, -2.7, 2.7, 8.0]:
 		_add_box("Planter", Vector3(x, 0.27, 5.0), Vector3(0.9, 0.40, 0.75), mat_metal)
