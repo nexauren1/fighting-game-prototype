@@ -254,7 +254,7 @@ func _build_model() -> void:
 	leg_r = _add_limb(body_core, "LegR", Vector3(0.18, 0.43, 0), 0.13, 0.63, dark)
 	_add_box(body_core, "KneeL", Vector3(-0.18, 0.73, 0.04), Vector3(0.32, 0.18, 0.32), secondary_mat)
 	_add_box(body_core, "KneeR", Vector3(0.18, 0.73, 0.04), Vector3(0.32, 0.18, 0.32), secondary_mat)
-	_add_box(body_core, "Torso", Vector3(0, 1.25, 0), Vector3(0.82, 0.82, 0.50), dark)
+	_add_capsule(body_core, "Torso", Vector3(0, 1.25, 0), 0.34, 0.82, dark, Vector3(1.0, 1.0, 0.78))
 	_add_box(body_core, "Chest", Vector3(0, 1.42, 0.27), Vector3(0.58, 0.34, 0.10), accent_mat)
 	_add_box(body_core, "Core", Vector3(0, 1.30, 0.33), Vector3(0.25, 0.15, 0.07), visor)
 	_add_box(body_core, "Waist", Vector3(0, 0.95, 0.25), Vector3(0.72, 0.12, 0.10), secondary_mat)
@@ -280,13 +280,17 @@ func _build_model() -> void:
 	body_core.add_child(head)
 	_add_sphere(head, "HeadMesh", Vector3.ZERO, 0.28, skin)
 	_add_box(head, "Helmet", Vector3(0, 0.13, -0.02), Vector3(0.46, 0.18, 0.40), hair)
+	_add_box(head, "HelmetCrown", Vector3(0, 0.22, -0.02), Vector3(0.34, 0.14, 0.30), hair)
 	_add_box(head, "Visor", Vector3(0, 0.01, 0.25), Vector3(0.40, 0.10, 0.04), visor)
+	_add_sphere(head, "JawLight", Vector3(0, -0.12, 0.18), 0.18, skin)
 
 	if fighter_name == "Rex":
 		_add_box(body_core, "BackUnit", Vector3(0, 1.50, -0.33), Vector3(0.16, 0.55, 0.10), secondary_mat, Vector3(-12, 0, 0))
 		_add_box(body_core, "ShoulderMark", Vector3(0.63, 1.52, 0), Vector3(0.11, 0.32, 0.18), secondary_mat)
+		_add_box(body_core, "RexChestGuard", Vector3(0, 1.60, 0.27), Vector3(0.46, 0.10, 0.12), accent_mat, Vector3(-8, 0, 0))
 	else:
 		_add_box(body_core, "HairBand", Vector3(0, 1.98, -0.24), Vector3(0.62, 0.12, 0.08), hair)
+		_add_box(body_core, "HairCrest", Vector3(0.02, 2.15, -0.08), Vector3(0.34, 0.16, 0.22), hair, Vector3(-8, 0, 0))
 		_add_box(body_core, "Sash", Vector3(0, 1.08, 0.31), Vector3(0.58, 0.06, 0.08), accent_mat)
 		_add_box(body_core, "HipGuardL", Vector3(-0.30, 0.92, 0.17), Vector3(0.14, 0.30, 0.20), secondary_mat, Vector3(0, 0, -12))
 		_add_box(body_core, "HipGuardR", Vector3(0.30, 0.92, 0.17), Vector3(0.14, 0.30, 0.20), secondary_mat, Vector3(0, 0, 12))
@@ -419,7 +423,22 @@ func _add_limb(parent: Node3D, node_name: String, pos: Vector3, radius: float, h
 	node.name = node_name
 	node.position = pos
 	parent.add_child(node)
-	_add_box(node, "Segment", Vector3.ZERO, Vector3(radius * 2.0, height, radius * 2.0), material)
+	_add_capsule(node, "Segment", Vector3.ZERO, radius, height, material)
+	return node
+
+func _add_capsule(parent: Node3D, node_name: String, pos: Vector3, radius: float, height: float, material: Material, scale_value := Vector3.ONE) -> MeshInstance3D:
+	var mesh := CapsuleMesh.new()
+	mesh.radius = radius
+	mesh.height = height
+	mesh.radial_segments = 16
+	mesh.rings = 6
+	var node := MeshInstance3D.new()
+	node.name = node_name
+	node.mesh = mesh
+	node.material_override = material
+	node.position = pos
+	node.scale = scale_value
+	parent.add_child(node)
 	return node
 
 func _add_sphere(parent: Node3D, node_name: String, pos: Vector3, radius: float, material: Material) -> MeshInstance3D:
