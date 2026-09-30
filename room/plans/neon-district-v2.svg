@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="white"/>
+  <g font-family="Arial, sans-serif" fill="black">
+    <text x="60" y="50" font-size="28" font-weight="700">NEON DISTRICT v2 — ENGINEERING FLOOR PLAN</text>
+    <text x="60" y="78" font-size="15">Gameplay room · bilateral stage · metres · lower-room projection</text>
+  </g>
+  <g stroke="black" fill="none">
+    <rect x="90" y="110" width="1020" height="520" stroke-width="3"/>
+    <rect x="295" y="245" width="610" height="260" stroke-width="4"/>
+    <rect x="325" y="268" width="550" height="214" stroke-width="2" stroke-dasharray="12 8"/>
+    <line x1="295" y1="250" x2="905" y2="250" stroke-width="7"/>
+    <line x1="295" y1="500" x2="905" y2="500" stroke-width="7"/>
+    <line x1="300" y1="245" x2="300" y2="505" stroke-width="7"/>
+    <line x1="900" y1="245" x2="900" y2="505" stroke-width="7"/>
+  </g>
+  <g stroke="#555" fill="none">
+    <rect x="115" y="135" width="100" height="190"/>
+    <rect x="250" y="135" width="120" height="190"/>
+    <rect x="830" y="135" width="120" height="190"/>
+    <rect x="985" y="135" width="100" height="190"/>
+    <rect x="115" y="395" width="100" height="190"/>
+    <rect x="250" y="395" width="120" height="190"/>
+    <rect x="830" y="395" width="120" height="190"/>
+    <rect x="985" y="395" width="100" height="190"/>
+  </g>
+  <g fill="#111" font-family="Arial, sans-serif" font-size="15">
+    <text x="355" y="230">COMBAT DECK 20.5 × 8.7</text>
+    <text x="360" y="295">ACTIVE ENVELOPE X -8.3…8.3 · Z -3.1…3.1</text>
+    <text x="130" y="175">CITY ROW</text>
+    <text x="935" y="175">CITY ROW</text>
+    <text x="130" y="435">CITY ROW</text>
+    <text x="935" y="435">CITY ROW</text>
+    <text x="550" y="615">OPEN-AIR STAGE / GROUND 34 × 26</text>
+  </g>
+  <g stroke="black" fill="white" stroke-width="2">
+    <circle cx="490" cy="375" r="13"/>
+    <circle cx="710" cy="375" r="13"/>
+    <rect x="472" y="420" width="36" height="16"/>
+    <rect x="692" y="420" width="36" height="16"/>
+    <circle cx="600" cy="150" r="70"/>
+    <rect x="420" y="215" width="360" height="16"/>
+    <rect x="405" y="200" width="390" height="10"/>
+  </g>
+  <g fill="black" font-family="Arial, sans-serif" font-size="14">
+    <text x="460" y="405">P1 SPAWN</text>
+    <text x="675" y="405">CPU SPAWN</text>
+    <text x="448" y="457">P1</text>
+    <text x="695" y="457">CPU</text>
+    <text x="548" y="145">HOLOGRAM</text>
+    <text x="563" y="162">RING</text>
+    <text x="555" y="195">NEXAR SIGN / REAR FOCAL</text>
+  </g>
+  <g stroke="#777" fill="none" stroke-width="2">
+    <path d="M600 680 L600 645"/>
+    <path d="M590 655 L600 645 L610 655"/>
+  </g>
+  <text x="625" y="658" font-family="Arial, sans-serif" font-size="14" fill="black">NORTH / REAR BACKDROP</text>
+  <g font-family="Arial, sans-serif" font-size="14" fill="black">
+    <text x="60" y="675">Legend: solid black = structural/boundary geometry · dashed = locked gameplay envelope · open circles = spawn markers</text>
+  </g>
+</svg>
