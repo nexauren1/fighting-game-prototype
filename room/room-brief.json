@@ -1,0 +1,54 @@
+{
+  "schema":"game-room.room-brief.v1",
+  "room_id":"neon-district-v2",
+  "title":"Neon District — Competitive Stage",
+  "family":"gameplay-room",
+  "purpose":"1v1 3D fighting stage with a readable combat lane, controlled movement bounds, strong hero framing and a futuristic city backdrop.",
+  "runtime":"Godot 4.x, desktop and mobile, gl_compatibility",
+  "units":"metres",
+  "shell":{
+    "type":"open-air elevated combat stage",
+    "ground_bounds":[34.0,26.0],
+    "combat_deck":[20.5,8.7],
+    "combat_surface":[19.5,7.9],
+    "surface_height":0.29
+  },
+  "hero":{
+    "type":"fighter-pair",
+    "reserve":"entire active combat envelope plus a 1.0 m visual breathing margin around both fighters",
+    "secondary_focal":"rear hologram ring and NEXAR sign"
+  },
+  "circulation":{
+    "active_x":[-8.3,8.3],
+    "active_z":[-3.1,3.1],
+    "spawn_player":[-3.2,0.30,0.0],
+    "spawn_cpu":[3.2,0.30,0.0],
+    "recovery_zone":"inside active rectangle; no off-stage traversal during round"
+  },
+  "camera":{
+    "production_position":[0.0,5.0,13.5],
+    "fov_degrees":48.0,
+    "authority":"battle.gd runtime camera"
+  },
+  "symmetry":{
+    "mode":"bilateral",
+    "order":2,
+    "applies_to":["combat_deck","boundary_edges","rear_stage_framing","fighter_spawn_layout"],
+    "exceptions":["cyan/pink accent assignment","asymmetric decorative billboard text"]
+  },
+  "performance_budget":{
+    "target_runtime_triangles":80000,
+    "max_dynamic_lights":6,
+    "hero_fighter_count":2,
+    "external_3d_generation_credits":0
+  },
+  "paid_service_budget":{
+    "meshy_allowed_before_function_approval":false,
+    "current_credit_ceiling":0,
+    "retry_policy":"not applicable until explicit approval and a verified current Meshy price"
+  },
+  "design_language":{
+    "materials":["dark metal","graphite","cyan emissive","pink emissive","violet emissive"],
+    "visual_direction":"clean futuristic cyberpunk, readable silhouettes, restrained neon"
+  }
+}
