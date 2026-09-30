@@ -25,6 +25,20 @@ jobs:
           use-dotnet: false
           include-templates: true
 
+      - name: Install Web export templates if missing
+        run: |
+          set -e
+          GODOT_TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          mkdir -p "$GODOT_TEMPLATE_DIR"
+          if [ ! -f "$GODOT_TEMPLATE_DIR/web_nothreads_release.zip" ]; then
+            curl -L --fail --retry 3 -o /tmp/godot_templates.tpz "https://downloads.godotengine.org/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz"
+            rm -rf /tmp/godot_templates
+            mkdir -p /tmp/godot_templates
+            unzip -q /tmp/godot_templates.tpz -d /tmp/godot_templates
+            cp /tmp/godot_templates/templates/web_* "$GODOT_TEMPLATE_DIR/"
+          fi
+          test -f "$GODOT_TEMPLATE_DIR/web_nothreads_release.zip"
+
       - name: Export Web build
         run: |
           mkdir -p build/web
