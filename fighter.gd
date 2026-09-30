@@ -33,10 +33,13 @@ var overdrive := 0.0
 var enhanced_special := false
 var block_timer := 9.0
 var style_id := 0
+var attack_lunge_done := false
+var attack_variant := 0
 
 const ATTACK_DURATION := [0.30, 0.46, 0.62]
 const ATTACK_DAMAGE := [8.0, 16.0, 24.0]
 const ATTACK_RANGE := [1.55, 1.80, 2.10]
+const LUNGE_DISTANCE := [0.28, 0.42, 0.58]
 
 func setup(name_value: String, accent_value: Color, secondary_value: Color, style_value: int = 0) -> void:
 	fighter_name = name_value
@@ -55,6 +58,8 @@ func _physics_process(delta: float) -> void:
 			attack_kind = -1
 			if continue_light:
 				_start_attack_internal(0)
+	_apply_attack_motion()
+
 	if not is_on_floor():
 		velocity.y -= 22.0 * delta
 	else:
@@ -137,6 +142,8 @@ func _start_attack_internal(kind: int) -> bool:
 		attack_duration = ATTACK_DURATION[attack_kind]
 	attack_time = attack_duration
 	attack_hit_done = false
+	attack_lunge_done = false
+	attack_variant = (combo_stage + style_id + (1 if fighter_name == "Zara" else 0)) % 3
 	return true
 
 func reset_combo() -> void:
@@ -284,6 +291,16 @@ func _build_model() -> void:
 		_add_box(body_core, "HipGuardL", Vector3(-0.30, 0.92, 0.17), Vector3(0.14, 0.30, 0.20), secondary_mat, Vector3(0, 0, -12))
 		_add_box(body_core, "HipGuardR", Vector3(0.30, 0.92, 0.17), Vector3(0.14, 0.30, 0.20), secondary_mat, Vector3(0, 0, 12))
 
+func _apply_attack_motion() -> void:
+	if not is_attacking() or attack_lunge_done:
+		return
+	var progress := 1.0 - attack_time / attack_duration
+	if progress < 0.28:
+		var lunge := LUNGE_DISTANCE[attack_kind]
+		var direction := -global_transform.basis.z.normalized()
+		global_position += direction * (lunge * 0.34)
+		attack_lunge_done = true
+
 func _animate(_delta: float) -> void:
 	if visual == null:
 		return
@@ -296,43 +313,70 @@ func _animate(_delta: float) -> void:
 
 	if knocked_out:
 		body_core.rotation.z = -1.15
+		body_core.rotation.x = 0.22
 		visual.position.y = -0.18
 		return
 
 	if blocking:
-		arm_l.rotation.z = 0.65
-		arm_r.rotation.z = -0.65
+		arm_l.rotation.z = 0.72
+		arm_r.rotation.z = -0.72
+		arm_l.rotation.x = -0.40
+		arm_r.rotation.x = -0.40
 		body_core.scale = Vector3(0.96, 1.02, 0.96)
 	elif is_attacking():
 		var progress := clampf(1.0 - attack_time / attack_duration, 0.0, 1.0)
 		var swing := sin(progress * PI)
+		var windup := minf(progress / 0.22, 1.0)
 		if attack_kind == 0:
-			arm_r.rotation.z = -1.20 * swing
-			arm_r.rotation.x = -0.45 * swing
+			if fighter_name == "Rex":
+				arm_r.rotation.z = lerp(0.15, -1.45, windup) * swing
+				arm_r.rotation.x = lerp(-0.15, -0.55, windup) * swing
+				arm_l.rotation.z = -0.18 * swing
+			else:
+				arm_l.rotation.z = lerp(-0.10, 1.35, windup) * swing
+				arm_l.rotation.x = lerp(-0.20, -0.50, windup) * swing
+				arm_r.rotation.z = -0.24 * swing
+			body_core.rotation.y = (0.10 if attack_variant == 1 else -0.08) * swing
 		elif attack_kind == 1:
-			arm_r.rotation.z = -1.55 * swing
-			arm_r.rotation.x = -0.80 * swing
-			body_core.rotation.z = -0.06 * swing
+			body_core.rotation.y = (-0.24 if fighter_name == "Rex" else 0.24) * swing
+			if fighter_name == "Zara":
+				leg_r.rotation.x = -1.05 * swing
+				leg_l.rotation.x = 0.38 * swing
+				arm_l.rotation.z = 0.72 * swing
+				arm_r.rotation.z = -1.12 * swing
+			else:
+				arm_r.rotation.z = -1.72 * swing
+				arm_r.rotation.x = -0.72 * swing
+				arm_l.rotation.z = 0.52 * swing
+			body_core.scale = Vector3.ONE * (1.0 + 0.06 * swing)
 		else:
-			arm_l.rotation.z = 1.20 * swing
-			arm_r.rotation.z = -1.20 * swing
-			body_core.rotation.z = -0.10 * swing
-			body_core.scale = Vector3.ONE * (1.0 + (0.11 if style_id == 2 else 0.06) * swing)
+			body_core.rotation.y = 0.30 * sin(progress * PI)
+			arm_l.rotation.z = 1.25 * swing
+			arm_r.rotation.z = -1.25 * swing
+			arm_l.rotation.x = -0.45 * swing
+			arm_r.rotation.x = -0.55 * swing
+			if fighter_name == "Rex":
+				body_core.scale = Vector3.ONE * (1.0 + 0.11 * swing)
+			else:
+				body_core.scale = Vector3(1.0 + 0.05 * swing, 1.0 + 0.13 * swing, 1.0 + 0.05 * swing)
 	elif stun_time > 0.0:
 		var recoil := sin(stun_time * 24.0) * 0.10
 		body_core.rotation.x = recoil
+		body_core.rotation.y = recoil * 0.7
 		arm_l.rotation.z = 0.95
 		arm_r.rotation.z = -0.95
 		leg_l.rotation.x = -0.10
 		leg_r.rotation.x = 0.12
 	elif move_amount > 0.1:
-		var step := sin(t * (3.8 if style_id == 1 else 3.0)) * 0.12
+		var step := sin(t * (4.2 if style_id == 1 else 3.2)) * 0.15
 		leg_l.rotation.x = step
 		leg_r.rotation.x = -step
-		arm_l.rotation.x = -step * 0.7
-		arm_r.rotation.x = step * 0.7
+		arm_l.rotation.x = -step * 0.8
+		arm_r.rotation.x = step * 0.8
+		if fighter_name == "Zara":
+			body_core.rotation.y = sin(t * 2.0) * 0.035
 	else:
-		var bounce := sin(stance_phase * (1.35 if style_id == 1 else 1.0)) * 0.035
+		var bounce := sin(stance_phase * (1.45 if style_id == 1 else 1.0)) * 0.035
 		body_core.position.y = bounce
 		body_core.rotation.x = -0.035
 		arm_l.rotation.z = 0.28 + sin(stance_phase) * 0.05
