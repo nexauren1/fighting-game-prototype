@@ -626,18 +626,6 @@ func _update_hud() -> void:
 	player_name_label.text = "%s • %s • %03d HP" % [player.fighter_name, player.get_style_label(), int(player.health)]
 	cpu_name_label.text = "%s • %s • %03d HP" % [cpu.fighter_name, cpu.get_style_label(), int(cpu.health)]
 
-func _health_bar(parent: Control, pos: Vector2, width: float, color: Color, reverse: bool) -> ColorRect:
-	var background := ColorRect.new()
-	background.position = pos
-	background.size = Vector2(width, 20)
-	background.color = Color("#111624")
-	parent.add_child(background)
-	var fill := ColorRect.new()
-	fill.size = background.size
-	fill.color = color
-	background.add_child(fill)
-	fill.set_meta("reverse", reverse)
-	return fill
 
 func _end_message(text_value: String) -> void:
 	if round_over:
