@@ -109,7 +109,7 @@ func _build_props() -> void:
 
 	var nexar_label := Label3D.new()
 	nexar_label.name = "NexarSign"
-	nexar_label.text = "NEXAR"
+	nexar_label.text = "NEXAUREN"
 	nexar_label.font_size = 84
 	nexar_label.pixel_size = 0.012
 	nexar_label.outline_size = 14
