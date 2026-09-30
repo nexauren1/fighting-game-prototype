@@ -98,7 +98,7 @@ func _input(event: InputEvent) -> void:
 		_player_attack(1)
 	elif key.keycode == KEY_H or key.keycode == KEY_B:
 		_player_attack(2)
-	elif key.keycode == KEY_R or key.keycode == KEY_A:
+	elif key.keycode == KEY_R:
 		block_held = true
 	elif key.keycode == KEY_T:
 		_player_dash()
@@ -398,7 +398,7 @@ func _setup_hud() -> void:
 	root.add_child(announce)
 
 	root.add_child(_label("NEON DISTRICT  •  NEXAR BATTLE ARENA", Vector2(28, 680), Vector2(500, 22), 11, MUTED))
-	root.add_child(_label("X LIGHT  •  Y HEAVY  •  B SPECIAL  •  A BLOCK", Vector2(820, 680), Vector2(430, 22), 11, MUTED))
+	root.add_child(_label("WASD MOVE  •  X LIGHT  •  Y HEAVY  •  B SPECIAL  •  R BLOCK", Vector2(760, 680), Vector2(490, 22), 11, MUTED))
 
 func _portrait(parent: Control, path: String, pos: Vector2) -> TextureRect:
 	var portrait := TextureRect.new()
@@ -532,11 +532,21 @@ func _layout_touch_controls() -> void:
 	if mobile_root == null or joystick == null:
 		return
 	var size := get_viewport().get_visible_rect().size
-	joystick.position = Vector2(34, size.y - 208)
+	var compact := size.x < 700.0
+	var button_size := Vector2(70, 62) if compact else Vector2(88, 76)
+	var gap := 74.0 if compact else 96.0
+	var joystick_size := 154.0 if compact else 190.0
+	joystick.size = Vector2(joystick_size, joystick_size)
+	joystick.position = Vector2(20, size.y - joystick_size - 22)
 
-	var start_x := size.x - 390.0
-	var y := size.y - 175.0
-	var gap := 96.0
+	var total_width := gap * 3.0 + button_size.x
+	var start_x := maxf(8.0, size.x - total_width - 18.0)
+	var y := size.y - button_size.y - 24.0
+
+	for node_name in ["Action0", "Action1", "Action2", "Block"]:
+		var node := mobile_root.get_node_or_null(node_name)
+		if node:
+			node.size = button_size
 
 	var action0 := mobile_root.get_node_or_null("Action0")
 	var action1 := mobile_root.get_node_or_null("Action1")
@@ -546,11 +556,11 @@ func _layout_touch_controls() -> void:
 	if action0:
 		action0.position = Vector2(start_x, y)
 	if action1:
-		action1.position = Vector2(start_x + gap, y - 46)
+		action1.position = Vector2(start_x + gap, y - (button_size.y * 0.58))
 	if action2:
 		action2.position = Vector2(start_x + gap * 2.0, y)
 	if block:
-		block.position = Vector2(start_x + gap * 3.0, y - 46)
+		block.position = Vector2(start_x + gap * 3.0, y - (button_size.y * 0.58))
 
 func _spawn_hit_effect(pos: Vector3, color: Color, heavy: bool) -> void:
 	var root := Node3D.new()
@@ -665,9 +675,10 @@ func _show_win_screen(result_text: String) -> void:
 	panel.add_theme_stylebox_override("panel", style)
 	layer.add_child(panel)
 
-	var winner_is_player := result_text.begins_with(player.fighter_name)
-	var winner_color := CYAN if winner_is_player else PINK
-	var winner_name := player.fighter_name if winner_is_player else cpu.fighter_name
+	var is_draw := result_text == "DRAW"
+	var winner_is_player := not is_draw and result_text.begins_with(player.fighter_name)
+	var winner_color := PURPLE if is_draw else (CYAN if winner_is_player else PINK)
+	var winner_name := "DRAW" if is_draw else (player.fighter_name if winner_is_player else cpu.fighter_name)
 	var winner_art := "res://art/rex.svg" if winner_name == "Rex" else "res://art/zara.svg"
 
 	var badge := Label.new()
@@ -680,7 +691,7 @@ func _show_win_screen(result_text: String) -> void:
 	panel.add_child(badge)
 
 	var title := Label.new()
-	title.text = "VICTORY" if winner_name != "DRAW" else "DRAW"
+	title.text = "DRAW" if is_draw else "VICTORY"
 	title.position = Vector2(40, 70)
 	title.size = Vector2(580, 72)
 	title.add_theme_font_size_override("font_size", 58)
@@ -698,7 +709,7 @@ func _show_win_screen(result_text: String) -> void:
 	panel.add_child(portrait)
 
 	var winner_label := Label.new()
-	winner_label.text = winner_name + ("  •  " + player.get_style_label() if winner_is_player else "  •  CPU")
+	winner_label.text = "BOTH FIGHTERS" if is_draw else winner_name + ("  •  " + player.get_style_label() if winner_is_player else "  •  CPU")
 	winner_label.position = Vector2(40, 342)
 	winner_label.size = Vector2(580, 38)
 	winner_label.add_theme_font_size_override("font_size", 26)
