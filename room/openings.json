@@ -1,0 +1,13 @@
+{
+  "schema":"game-room.openings.v1",
+  "room_id":"neon-district-v2",
+  "openings":[],
+  "primary_arrival":{
+    "status":"functional_exception",
+    "reason":"This is an open-air competitive stage. The match runtime does not traverse from an exterior hallway into the arena; both fighters are spawned directly into the locked combat envelope.",
+    "clear_width_m":0.0,
+    "navigation_required":false
+  },
+  "opening_masks_required":false,
+  "notes":"No door, window, or deep-alcove architecture is used in v2. Decorative rear elements must not read as traversable openings."
+}
