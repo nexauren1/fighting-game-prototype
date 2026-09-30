@@ -351,13 +351,17 @@ func _animate(_delta: float) -> void:
 			body_core.scale = Vector3.ONE * (1.0 + 0.06 * swing)
 		else:
 			body_core.rotation.y = 0.30 * sin(progress * PI)
-			arm_l.rotation.z = 1.25 * swing
-			arm_r.rotation.z = -1.25 * swing
-			arm_l.rotation.x = -0.45 * swing
-			arm_r.rotation.x = -0.55 * swing
 			if fighter_name == "Rex":
+				arm_l.rotation.z = 1.25 * swing
+				arm_r.rotation.z = -1.25 * swing
+				arm_l.rotation.x = -0.45 * swing
+				arm_r.rotation.x = -0.55 * swing
 				body_core.scale = Vector3.ONE * (1.0 + 0.11 * swing)
 			else:
+				leg_l.rotation.x = -1.22 * swing
+				leg_r.rotation.x = 0.50 * swing
+				arm_l.rotation.z = 1.05 * swing
+				arm_r.rotation.z = -0.65 * swing
 				body_core.scale = Vector3(1.0 + 0.05 * swing, 1.0 + 0.13 * swing, 1.0 + 0.05 * swing)
 	elif stun_time > 0.0:
 		var recoil := sin(stun_time * 24.0) * 0.10
