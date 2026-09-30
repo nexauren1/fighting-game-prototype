@@ -86,6 +86,27 @@ func _build_city() -> void:
 				_add_box("RoofGlow", Vector3(x, h + 0.25, z), Vector3(w * 0.38, 0.05, d * 0.38), mat_cyan if side < 0 else mat_pink)
 
 func _build_props() -> void:
+	_add_character_billboard("RexBillboard", "res://art/rex.svg", Vector3(-11.0, 5.2, -9.0), Vector2(4.2, 4.2), CYAN, 8.0)
+	_add_character_billboard("ZaraBillboard", "res://art/zara.svg", Vector3(11.0, 5.2, -9.0), Vector2(4.2, 4.2), PINK, 8.0)
+
+	var arena_mark := Label3D.new()
+	arena_mark.name = "ArenaMark"
+	arena_mark.text = "N"
+	arena_mark.font_size = 150
+	arena_mark.pixel_size = 0.006
+	arena_mark.modulate = Color("#DDFBFF")
+	arena_mark.outline_size = 16
+	arena_mark.outline_modulate = Color("#174AB0")
+	arena_mark.position = Vector3(0, 0.37, 0)
+	arena_mark.rotation_degrees = Vector3(-90, 0, 0)
+	arena_mark.no_depth_test = true
+	add_child(arena_mark)
+
+	_add_stage_rail(Vector3(-10.25, 1.0, 0), Vector3(0.18, 1.6, 8.8), mat_purple)
+	_add_stage_rail(Vector3(10.25, 1.0, 0), Vector3(0.18, 1.6, 8.8), mat_purple)
+	_add_stage_rail(Vector3(0, 1.0, -4.55), Vector3(20.7, 1.6, 0.18), mat_pink)
+	_add_stage_rail(Vector3(0, 1.0, 4.55), Vector3(20.7, 1.6, 0.18), mat_cyan)
+
 	var nexar_label := Label3D.new()
 	nexar_label.name = "NexarSign"
 	nexar_label.text = "NEXAR"
@@ -161,6 +182,30 @@ func _build_lighting() -> void:
 	_add_light(Vector3(-7.5, 4.0, -3.0), CYAN, 7.0, 9.0)
 	_add_light(Vector3(7.5, 4.0, -3.0), PINK, 7.0, 9.0)
 	_add_light(Vector3(0, 5.5, -5.0), PURPLE, 5.0, 11.0)
+
+func _add_character_billboard(node_name: String, texture_path: String, pos: Vector3, size: Vector2, accent: Color, glow_strength: float) -> void:
+	var node := MeshInstance3D.new()
+	node.name = node_name
+	var quad := QuadMesh.new()
+	quad.size = size
+	node.mesh = quad
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_texture = load(texture_path) as Texture2D
+	material.emission_enabled = true
+	material.emission = accent
+	material.emission_energy_multiplier = glow_strength
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	node.material_override = material
+	node.position = pos
+	add_child(node)
+
+func _add_stage_rail(pos: Vector3, size: Vector3, accent: Material) -> void:
+	_add_box("RailFrame", pos, size, mat_metal)
+	var light_size := Vector3(size.x * 0.78, 0.055, 0.055)
+	if size.z > size.x:
+		light_size = Vector3(0.055, 0.055, size.z * 0.78)
+	_add_box("RailGlow", pos + Vector3(0, size.y * 0.34, 0), light_size, accent)
 
 func _add_light(pos: Vector3, color: Color, energy: float, range_value: float) -> void:
 	var light := OmniLight3D.new()
