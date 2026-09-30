@@ -252,7 +252,7 @@ func _add_background_texture(path: String, opacity: float = 1.0) -> void:
 	root_ui.move_child(background, 0)
 
 func _header(step: String) -> void:
-	root_ui.add_child(_label("✦  NEXAR BATTLE ARENA", Vector2(52, 40), Vector2(360, 30), 20, WHITE))
+	root_ui.add_child(_label("✦  NEXAUREN BATTLE ARENA", Vector2(52, 40), Vector2(360, 30), 20, WHITE))
 	root_ui.add_child(_label(step, Vector2(54, 72), Vector2(420, 22), 11, CYAN))
 	root_ui.add_child(_label("GODOT 4.x / MOBILE READY", Vector2(960, 46), Vector2(230, 22), 11, MUTED))
 
