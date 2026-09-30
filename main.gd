@@ -64,7 +64,7 @@ func _show_home() -> void:
 	_clear()
 	_add_background_texture("res://art/home.svg", 1.0)
 	_header("HOME")
-	root_ui.add_child(_label("NEXAR\nBATTLE ARENA", Vector2(72, 150), Vector2(580, 150), 72, WHITE))
+	root_ui.add_child(_label("NEXAUREN\nBATTLE ARENA", Vector2(72, 150), Vector2(580, 150), 72, WHITE))
 	root_ui.add_child(_label("NEON DISTRICT", Vector2(76, 322), Vector2(300, 28), 16, CYAN))
 	root_ui.add_child(_label("TWO FIGHTERS. ONE ARENA. INFINITE POSSIBILITIES.", Vector2(76, 360), Vector2(510, 65), 15, MUTED))
 
