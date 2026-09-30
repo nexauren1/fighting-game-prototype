@@ -37,6 +37,7 @@ var combo_owner := ""
 var player_meter: ColorRect
 var cpu_meter: ColorRect
 var combo_stat_label: Label
+var win_screen_shown := false
 
 const CYAN := Color("#58E7FF")
 const PINK := Color("#FF5EC4")
@@ -93,9 +94,9 @@ func _input(event: InputEvent) -> void:
 
 	if key.keycode == KEY_F or key.keycode == KEY_X:
 		_player_attack(0)
-	elif key.keycode == KEY_G:
+	elif key.keycode == KEY_G or key.keycode == KEY_Y:
 		_player_attack(1)
-	elif key.keycode == KEY_H:
+	elif key.keycode == KEY_H or key.keycode == KEY_B:
 		_player_attack(2)
 	elif key.keycode == KEY_R:
 		block_held = true
@@ -128,10 +129,11 @@ func _setup_world() -> void:
 	arena = ArenaScript.new()
 	add_child(arena)
 	arena.build()
+	_add_city_backdrop()
 
 	camera = Camera3D.new()
 	camera.fov = 48.0
-	camera.position = Vector3(0, 5.0, 13.5)
+	camera.position = ArenaScript.CAMERA_POSITION
 	camera.current = true
 	add_child(camera)
 
@@ -166,12 +168,12 @@ func _spawn_fighters() -> void:
 
 	player = FighterScene.instantiate() as CharacterBody3D
 	player.setup(player_name, player_accent, player_secondary, selected_style)
-	player.position = Vector3(-3.2, 0.30, 0.0)
+	player.position = ArenaScript.PLAYER_SPAWN
 	add_child(player)
 
 	cpu = FighterScene.instantiate() as CharacterBody3D
 	cpu.setup(cpu_name, cpu_accent, cpu_secondary, (selected_style + 1) % 3)
-	cpu.position = Vector3(3.2, 0.30, 0.0)
+	cpu.position = ArenaScript.CPU_SPAWN
 	add_child(cpu)
 
 	player.rotation.y = PI * 0.5
@@ -201,8 +203,8 @@ func _update_player(delta: float) -> void:
 	if player.position.y < 0.30:
 		player.position.y = 0.30
 
-	player.position.x = clampf(player.position.x, -8.3, 8.3)
-	player.position.z = clampf(player.position.z, -3.1, 3.1)
+	player.position.x = clampf(player.position.x, ArenaScript.COMBAT_X_MIN, ArenaScript.COMBAT_X_MAX)
+	player.position.z = clampf(player.position.z, ArenaScript.COMBAT_Z_MIN, ArenaScript.COMBAT_Z_MAX)
 
 func _update_cpu(_delta: float) -> void:
 	if not is_instance_valid(cpu) or cpu.knocked_out:
@@ -228,8 +230,8 @@ func _update_cpu(_delta: float) -> void:
 	else:
 		cpu.set_block(false)
 
-	cpu.position.x = clampf(cpu.position.x, -8.3, 8.3)
-	cpu.position.z = clampf(cpu.position.z, -3.1, 3.1)
+	cpu.position.x = clampf(cpu.position.x, ArenaScript.COMBAT_X_MIN, ArenaScript.COMBAT_X_MAX)
+	cpu.position.z = clampf(cpu.position.z, ArenaScript.COMBAT_Z_MIN, ArenaScript.COMBAT_Z_MAX)
 
 	_face_each_other()
 
@@ -271,8 +273,8 @@ func _check_attack(attacker: CharacterBody3D, target: CharacterBody3D) -> void:
 		combo_owner = owner
 	combo_hits += 1
 	combo_time = 0.95
-	var was_blocking := target.blocking
-	var perfect_block := target.is_perfect_block()
+	var was_blocking: bool = target.blocking
+	var perfect_block: bool = target.is_perfect_block()
 	if perfect_block:
 		target.take_hit(0.0, push)
 		attacker.trigger_stun(0.30)
@@ -282,7 +284,7 @@ func _check_attack(attacker: CharacterBody3D, target: CharacterBody3D) -> void:
 		announce.text = "PERFECT BLOCK!"
 		announce.modulate = Color("#F8FBFF")
 		return
-	var was_attacking := target.is_attacking()
+	var was_attacking: bool = target.is_attacking()
 	target.take_hit(attacker.get_attack_damage(), push)
 	attacker.add_overdrive(8.0 if attacker.attack_kind == 0 else 12.0)
 	camera_shake = 0.20 if attacker.attack_kind >= 1 else 0.12
@@ -329,8 +331,8 @@ func _player_dash(direction_hint: Vector3 = Vector3.ZERO) -> void:
 		direction.x = 1.0 if player.position.x < cpu.position.x else -1.0
 	direction = direction.normalized()
 	player.position += direction * 1.4
-	player.position.x = clampf(player.position.x, -8.3, 8.3)
-	player.position.z = clampf(player.position.z, -3.1, 3.1)
+	player.position.x = clampf(player.position.x, ArenaScript.COMBAT_X_MIN, ArenaScript.COMBAT_X_MAX)
+	player.position.z = clampf(player.position.z, ArenaScript.COMBAT_Z_MIN, ArenaScript.COMBAT_Z_MAX)
 
 func _update_camera(delta: float) -> void:
 	if not is_instance_valid(camera):
@@ -359,8 +361,9 @@ func _setup_hud() -> void:
 	root.add_child(top_left)
 	root.add_child(top_right)
 
-	player_portrait = _portrait(root, "res://art/rex.svg", Vector2(38, 34))
-	cpu_portrait = _portrait(root, "res://art/zara.svg", Vector2(1154, 34))
+	var player_is_rex := selected_player == 0
+	player_portrait = _portrait(root, "res://art/rex.svg" if player_is_rex else "res://art/zara.svg", Vector2(38, 34))
+	cpu_portrait = _portrait(root, "res://art/zara.svg" if player_is_rex else "res://art/rex.svg", Vector2(1154, 34))
 	root.add_child(player_portrait)
 	root.add_child(cpu_portrait)
 
@@ -386,12 +389,16 @@ func _setup_hud() -> void:
 	combo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(combo_label)
 
+	combo_stat_label = _label("OVERDRIVE 0% • CHARGE", Vector2(430, 240), Vector2(420, 28), 13, PURPLE)
+	combo_stat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	root.add_child(combo_stat_label)
+
 	announce = _label("READY", Vector2(280, 278), Vector2(720, 84), 36, WHITE)
 	announce.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(announce)
 
-	root.add_child(_label("NEON DISTRICT  •  NEXAR BATTLE ARENA", Vector2(28, 680), Vector2(500, 22), 11, MUTED))
-	root.add_child(_label("WASD / F G H / R / T", Vector2(1070, 680), Vector2(190, 22), 11, MUTED))
+	root.add_child(_label("NEON DISTRICT  •  NEXAUREN BATTLE ARENA", Vector2(28, 680), Vector2(500, 22), 11, MUTED))
+	root.add_child(_label("WASD MOVE  •  X LIGHT  •  Y HEAVY  •  B SPECIAL  •  R BLOCK", Vector2(760, 680), Vector2(490, 22), 11, MUTED))
 
 func _portrait(parent: Control, path: String, pos: Vector2) -> TextureRect:
 	var portrait := TextureRect.new()
@@ -525,11 +532,21 @@ func _layout_touch_controls() -> void:
 	if mobile_root == null or joystick == null:
 		return
 	var size := get_viewport().get_visible_rect().size
-	joystick.position = Vector2(34, size.y - 208)
+	var compact := size.x < 700.0
+	var button_size := Vector2(70, 62) if compact else Vector2(88, 76)
+	var gap := 74.0 if compact else 96.0
+	var joystick_size := 154.0 if compact else 190.0
+	joystick.size = Vector2(joystick_size, joystick_size)
+	joystick.position = Vector2(20, size.y - joystick_size - 22)
 
-	var start_x := size.x - 390.0
-	var y := size.y - 175.0
-	var gap := 96.0
+	var total_width := gap * 3.0 + button_size.x
+	var start_x := maxf(8.0, size.x - total_width - 18.0)
+	var y := size.y - button_size.y - 24.0
+
+	for node_name in ["Action0", "Action1", "Action2", "Block"]:
+		var node := mobile_root.get_node_or_null(node_name)
+		if node:
+			node.size = button_size
 
 	var action0 := mobile_root.get_node_or_null("Action0")
 	var action1 := mobile_root.get_node_or_null("Action1")
@@ -539,11 +556,11 @@ func _layout_touch_controls() -> void:
 	if action0:
 		action0.position = Vector2(start_x, y)
 	if action1:
-		action1.position = Vector2(start_x + gap, y - 46)
+		action1.position = Vector2(start_x + gap, y - (button_size.y * 0.58))
 	if action2:
 		action2.position = Vector2(start_x + gap * 2.0, y)
 	if block:
-		block.position = Vector2(start_x + gap * 3.0, y - 46)
+		block.position = Vector2(start_x + gap * 3.0, y - (button_size.y * 0.58))
 
 func _spawn_hit_effect(pos: Vector3, color: Color, heavy: bool) -> void:
 	var root := Node3D.new()
@@ -609,9 +626,13 @@ func _fx_material(albedo: Color, emission: Color, energy: float) -> StandardMate
 func _update_hud() -> void:
 	if not is_instance_valid(player_bar) or not is_instance_valid(cpu_bar):
 		return
-	player_bar.size.x = 360.0 * player.health / player.max_health
-	cpu_bar.size.x = 360.0 * cpu.health / cpu.max_health
-	cpu_bar.position.x = 360.0 - cpu_bar.size.x
+	var bar_width := 330.0
+	player_bar.size.x = bar_width * player.health / player.max_health
+	cpu_bar.size.x = bar_width * cpu.health / cpu.max_health
+	cpu_bar.position.x = bar_width - cpu_bar.size.x
+	player_meter.size.x = bar_width * player.overdrive / 100.0
+	cpu_meter.size.x = bar_width * cpu.overdrive / 100.0
+	cpu_meter.position.x = bar_width - cpu_meter.size.x
 	if combo_label:
 		combo_label.text = "COMBO  x%d" % combo_hits if combo_hits > 1 and combo_time > 0.0 else ""
 	combo_stat_label.text = "OVERDRIVE %d%% • %s" % [int(player.overdrive), "ENHANCED SPECIAL" if player.overdrive >= 70.0 else "CHARGE"]
@@ -619,24 +640,103 @@ func _update_hud() -> void:
 	player_name_label.text = "%s • %s • %03d HP" % [player.fighter_name, player.get_style_label(), int(player.health)]
 	cpu_name_label.text = "%s • %s • %03d HP" % [cpu.fighter_name, cpu.get_style_label(), int(cpu.health)]
 
-func _health_bar(parent: Control, pos: Vector2, width: float, color: Color, reverse: bool) -> ColorRect:
-	var background := ColorRect.new()
-	background.position = pos
-	background.size = Vector2(width, 20)
-	background.color = Color("#111624")
-	parent.add_child(background)
-	var fill := ColorRect.new()
-	fill.size = background.size
-	fill.color = color
-	background.add_child(fill)
-	fill.set_meta("reverse", reverse)
-	return fill
 
 func _end_message(text_value: String) -> void:
 	if round_over:
 		return
 	round_over = true
-	announce.text = text_value + "\nENTER = REMATCH • ESC = HOME"
+	announce.text = text_value
+	_show_win_screen(text_value)
+
+func _show_win_screen(result_text: String) -> void:
+	if win_screen_shown:
+		return
+	win_screen_shown = true
+	var layer := CanvasLayer.new()
+	layer.name = "WinScreen"
+	add_child(layer)
+
+	var shade := ColorRect.new()
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.color = Color(0.01, 0.02, 0.06, 0.86)
+	layer.add_child(shade)
+
+	var panel := Panel.new()
+	panel.position = Vector2(310, 115)
+	panel.size = Vector2(660, 500)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#080D1A")
+	style.border_color = CYAN if result_text.begins_with(player.fighter_name) else PINK
+	style.set_border_width_all(2)
+	style.corner_radius_top_left = 24
+	style.corner_radius_top_right = 24
+	style.corner_radius_bottom_left = 24
+	style.corner_radius_bottom_right = 24
+	panel.add_theme_stylebox_override("panel", style)
+	layer.add_child(panel)
+
+	var is_draw := result_text == "DRAW"
+	var winner_is_player := not is_draw and result_text.begins_with(player.fighter_name)
+	var winner_color := PURPLE if is_draw else (CYAN if winner_is_player else PINK)
+	var winner_name := "DRAW" if is_draw else (player.fighter_name if winner_is_player else cpu.fighter_name)
+	var winner_art := "res://art/rex.svg" if winner_name == "Rex" else "res://art/zara.svg"
+
+	var badge := Label.new()
+	badge.text = "NEXAUREN / NEON DISTRICT"
+	badge.position = Vector2(48, 30)
+	badge.size = Vector2(560, 24)
+	badge.add_theme_font_size_override("font_size", 11)
+	badge.add_theme_color_override("font_color", winner_color)
+	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel.add_child(badge)
+
+	var title := Label.new()
+	title.text = "DRAW" if is_draw else "VICTORY"
+	title.position = Vector2(40, 70)
+	title.size = Vector2(580, 72)
+	title.add_theme_font_size_override("font_size", 58)
+	title.add_theme_color_override("font_color", WHITE)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel.add_child(title)
+
+	var portrait := TextureRect.new()
+	portrait.texture = load(winner_art)
+	portrait.position = Vector2(205, 148)
+	portrait.size = Vector2(250, 190)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.modulate = Color(1, 1, 1, 0.95)
+	panel.add_child(portrait)
+
+	var winner_label := Label.new()
+	winner_label.text = "BOTH FIGHTERS" if is_draw else winner_name + ("  •  " + player.get_style_label() if winner_is_player else "  •  CPU")
+	winner_label.position = Vector2(40, 342)
+	winner_label.size = Vector2(580, 38)
+	winner_label.add_theme_font_size_override("font_size", 26)
+	winner_label.add_theme_color_override("font_color", winner_color)
+	winner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel.add_child(winner_label)
+
+	var result_label := Label.new()
+	result_label.text = "Rex vs Zara  •  CLOSE-RANGE MELEE"
+	result_label.position = Vector2(40, 382)
+	result_label.size = Vector2(580, 24)
+	result_label.add_theme_font_size_override("font_size", 12)
+	result_label.add_theme_color_override("font_color", MUTED)
+	result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel.add_child(result_label)
+
+	var rematch := _button("REMATCH", Vector2(90, 430), Vector2(220, 52), winner_color)
+	rematch.pressed.connect(func():
+		var host := get_parent()
+		if host and host.has_method("_start_battle"):
+			host.call_deferred("_start_battle")
+	)
+	panel.add_child(rematch)
+
+	var home := _button("HOME", Vector2(350, 430), Vector2(220, 52), Color("#465273"))
+	home.pressed.connect(func(): get_tree().change_scene_to_file("res://main.tscn"))
+	panel.add_child(home)
 
 func _finish_round() -> void:
 	if player.health > cpu.health:

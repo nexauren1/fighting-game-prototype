@@ -64,7 +64,7 @@ func _show_home() -> void:
 	_clear()
 	_add_background_texture("res://art/home.svg", 1.0)
 	_header("HOME")
-	root_ui.add_child(_label("NEXAR\nBATTLE ARENA", Vector2(72, 150), Vector2(580, 150), 72, WHITE))
+	root_ui.add_child(_label("NEXAUREN\nBATTLE ARENA", Vector2(72, 150), Vector2(580, 150), 72, WHITE))
 	root_ui.add_child(_label("NEON DISTRICT", Vector2(76, 322), Vector2(300, 28), 16, CYAN))
 	root_ui.add_child(_label("TWO FIGHTERS. ONE ARENA. INFINITE POSSIBILITIES.", Vector2(76, 360), Vector2(510, 65), 15, MUTED))
 
@@ -89,14 +89,14 @@ func _show_home() -> void:
 	root_ui.add_child(_label("BUILD CONTENT", Vector2(682, 184), Vector2(250, 22), 11, CYAN))
 	root_ui.add_child(_label("REX  +  ZARA", Vector2(682, 222), Vector2(360, 44), 32, WHITE))
 	root_ui.add_child(_label("NEON DISTRICT", Vector2(682, 288), Vector2(330, 36), 25, WHITE))
-	root_ui.add_child(_label("City backdrop\nCentral combat platform\nTwo 3D characters\nIdle / walk / attack / hit / KO\nAnalog + four touch buttons", Vector2(682, 340), Vector2(380, 180), 16, MUTED))
+	root_ui.add_child(_label("Live 3D Rex + Zara\nNeon District combat platform\nIdle / walk / light combo / heavy / special\nBlock / perfect block / impact FX / KO\nTouch + keyboard controls", Vector2(682, 340), Vector2(420, 190), 16, MUTED))
 
 func _show_character_select() -> void:
 	_clear()
 	_add_background_texture("res://art/select.svg", 1.0)
 	_header("01 / CHARACTER SELECT")
 	root_ui.add_child(_label("CHOOSE YOUR FIGHTER", Vector2(72, 132), Vector2(650, 50), 38, WHITE))
-	root_ui.add_child(_label("The other fighter becomes the CPU opponent.", Vector2(74, 182), Vector2(600, 26), 15, MUTED))
+	root_ui.add_child(_label("The other fighter becomes the CPU opponent. The preview is the same live 3D fighter used in battle.", Vector2(74, 182), Vector2(880, 26), 15, MUTED))
 	_character_card(72, "REX", "TECHNICAL STRIKER", CYAN, 0)
 	_character_card(664, "ZARA", "PHASE ASSAULT", PINK, 1)
 
@@ -252,7 +252,7 @@ func _add_background_texture(path: String, opacity: float = 1.0) -> void:
 	root_ui.move_child(background, 0)
 
 func _header(step: String) -> void:
-	root_ui.add_child(_label("✦  NEXAR BATTLE ARENA", Vector2(52, 40), Vector2(360, 30), 20, WHITE))
+	root_ui.add_child(_label("✦  NEXAUREN BATTLE ARENA", Vector2(52, 40), Vector2(360, 30), 20, WHITE))
 	root_ui.add_child(_label(step, Vector2(54, 72), Vector2(420, 22), 11, CYAN))
 	root_ui.add_child(_label("GODOT 4.x / MOBILE READY", Vector2(960, 46), Vector2(230, 22), 11, MUTED))
 

@@ -4,6 +4,14 @@ const CYAN := Color("#58E7FF")
 const PINK := Color("#FF5EC4")
 const PURPLE := Color("#B86CFF")
 
+const COMBAT_X_MIN := -8.3
+const COMBAT_X_MAX := 8.3
+const COMBAT_Z_MIN := -3.1
+const COMBAT_Z_MAX := 3.1
+const PLAYER_SPAWN := Vector3(-3.2, 0.30, 0.0)
+const CPU_SPAWN := Vector3(3.2, 0.30, 0.0)
+const CAMERA_POSITION := Vector3(0.0, 5.0, 13.5)
+
 func build() -> void:
 	_build_materials()
 	_build_floor()
@@ -78,9 +86,30 @@ func _build_city() -> void:
 				_add_box("RoofGlow", Vector3(x, h + 0.25, z), Vector3(w * 0.38, 0.05, d * 0.38), mat_cyan if side < 0 else mat_pink)
 
 func _build_props() -> void:
+	_add_character_billboard("RexBillboard", "res://art/rex.svg", Vector3(-11.0, 5.2, -9.0), Vector2(4.2, 4.2), CYAN, 8.0)
+	_add_character_billboard("ZaraBillboard", "res://art/zara.svg", Vector3(11.0, 5.2, -9.0), Vector2(4.2, 4.2), PINK, 8.0)
+
+	var arena_mark := Label3D.new()
+	arena_mark.name = "ArenaMark"
+	arena_mark.text = "N"
+	arena_mark.font_size = 150
+	arena_mark.pixel_size = 0.006
+	arena_mark.modulate = Color("#DDFBFF")
+	arena_mark.outline_size = 16
+	arena_mark.outline_modulate = Color("#174AB0")
+	arena_mark.position = Vector3(0, 0.37, 0)
+	arena_mark.rotation_degrees = Vector3(-90, 0, 0)
+	arena_mark.no_depth_test = true
+	add_child(arena_mark)
+
+	_add_stage_rail(Vector3(-10.25, 1.0, 0), Vector3(0.18, 1.6, 8.8), mat_purple)
+	_add_stage_rail(Vector3(10.25, 1.0, 0), Vector3(0.18, 1.6, 8.8), mat_purple)
+	_add_stage_rail(Vector3(0, 1.0, -4.55), Vector3(20.7, 1.6, 0.18), mat_pink)
+	_add_stage_rail(Vector3(0, 1.0, 4.55), Vector3(20.7, 1.6, 0.18), mat_cyan)
+
 	var nexar_label := Label3D.new()
 	nexar_label.name = "NexarSign"
-	nexar_label.text = "NEXAR"
+	nexar_label.text = "NEXAUREN"
 	nexar_label.font_size = 84
 	nexar_label.pixel_size = 0.012
 	nexar_label.outline_size = 14
@@ -117,14 +146,14 @@ func _build_props() -> void:
 	ring.material_override = mat_cyan
 	add_child(ring)
 
-		for x in [-8.5, -4.2, 4.2, 8.5]:
+	for x in [-8.5, -4.2, 4.2, 8.5]:
 		_add_box("Pillar", Vector3(x, 1.4, -3.6), Vector3(0.18, 2.4, 0.18), mat_metal)
 		_add_box("PillarLight", Vector3(x, 2.65, -3.6), Vector3(0.26, 0.08, 0.26), mat_cyan if x < 0 else mat_pink)
 
-	_add_box("ObstacleA", Vector3(-6.0, 0.58, 1.75), Vector3(2.6, 0.64, 0.70), mat_metal)
-	_add_box("ObstacleALight", Vector3(-6.0, 0.93, 1.39), Vector3(2.1, 0.04, 0.05), mat_cyan)
-	_add_box("ObstacleB", Vector3(5.0, 0.56, -1.70), Vector3(3.1, 0.58, 0.66), mat_metal)
-	_add_box("ObstacleBLight", Vector3(5.0, 0.88, -2.05), Vector3(2.5, 0.04, 0.05), mat_pink)
+	_add_box("ObstacleA", Vector3(-6.0, 0.58, 4.80), Vector3(2.6, 0.64, 0.70), mat_metal)
+	_add_box("ObstacleALight", Vector3(-6.0, 0.93, 4.44), Vector3(2.1, 0.04, 0.05), mat_cyan)
+	_add_box("ObstacleB", Vector3(5.0, 0.56, -4.80), Vector3(3.1, 0.58, 0.66), mat_metal)
+	_add_box("ObstacleBLight", Vector3(5.0, 0.88, -4.44), Vector3(2.5, 0.04, 0.05), mat_pink)
 
 	for x in [-8.0, -2.7, 2.7, 8.0]:
 		_add_box("Planter", Vector3(x, 0.27, 5.0), Vector3(0.9, 0.40, 0.75), mat_metal)
@@ -153,6 +182,30 @@ func _build_lighting() -> void:
 	_add_light(Vector3(-7.5, 4.0, -3.0), CYAN, 7.0, 9.0)
 	_add_light(Vector3(7.5, 4.0, -3.0), PINK, 7.0, 9.0)
 	_add_light(Vector3(0, 5.5, -5.0), PURPLE, 5.0, 11.0)
+
+func _add_character_billboard(node_name: String, texture_path: String, pos: Vector3, size: Vector2, accent: Color, glow_strength: float) -> void:
+	var node := MeshInstance3D.new()
+	node.name = node_name
+	var quad := QuadMesh.new()
+	quad.size = size
+	node.mesh = quad
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_texture = load(texture_path) as Texture2D
+	material.emission_enabled = true
+	material.emission = accent
+	material.emission_energy_multiplier = glow_strength
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	node.material_override = material
+	node.position = pos
+	add_child(node)
+
+func _add_stage_rail(pos: Vector3, size: Vector3, accent: Material) -> void:
+	_add_box("RailFrame", pos, size, mat_metal)
+	var light_size := Vector3(size.x * 0.78, 0.055, 0.055)
+	if size.z > size.x:
+		light_size = Vector3(0.055, 0.055, size.z * 0.78)
+	_add_box("RailGlow", pos + Vector3(0, size.y * 0.34, 0), light_size, accent)
 
 func _add_light(pos: Vector3, color: Color, energy: float, range_value: float) -> void:
 	var light := OmniLight3D.new()

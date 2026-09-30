@@ -15,13 +15,9 @@ var blocking := false
 var knocked_out := false
 
 var visual: Node3D
-var body_core: Node3D
-var arm_l: Node3D
-var arm_r: Node3D
-var leg_l: Node3D
-var leg_r: Node3D
-var head: Node3D
-var base_height := 0.0
+var animation_player: AnimationPlayer
+var current_animation := ""
+
 var move_amount := 0.0
 var hit_flash := 0.0
 var stance_phase := 0.0
@@ -33,10 +29,17 @@ var overdrive := 0.0
 var enhanced_special := false
 var block_timer := 9.0
 var style_id := 0
+var attack_lunge_done := false
 
 const ATTACK_DURATION := [0.30, 0.46, 0.62]
 const ATTACK_DAMAGE := [8.0, 16.0, 24.0]
 const ATTACK_RANGE := [1.55, 1.80, 2.10]
+const LUNGE_DISTANCE := [0.28, 0.42, 0.58]
+
+const RIGGED_ASSETS := {
+	"Rex": "res://assets/characters/rex.glb",
+	"Zara": "res://assets/characters/zara.glb"
+}
 
 func setup(name_value: String, accent_value: Color, secondary_value: Color, style_value: int = 0) -> void:
 	fighter_name = name_value
@@ -55,6 +58,8 @@ func _physics_process(delta: float) -> void:
 			attack_kind = -1
 			if continue_light:
 				_start_attack_internal(0)
+	_apply_attack_motion()
+
 	if not is_on_floor():
 		velocity.y -= 22.0 * delta
 	else:
@@ -81,7 +86,7 @@ func set_style(value: int) -> void:
 func get_style_label() -> String:
 	if fighter_name == "Rex":
 		return ["VANGUARD", "RUSH", "BREAKER"][style_id]
-	return ["PHANTOM", "BLADE", "PULSE"][style_id]
+	return ["PHANTOM", "BLAZE", "PULSE"][style_id]
 
 func get_style_speed(base_speed: float) -> float:
 	return base_speed * [1.0, 1.18, 0.86][style_id]
@@ -137,6 +142,7 @@ func _start_attack_internal(kind: int) -> bool:
 		attack_duration = ATTACK_DURATION[attack_kind]
 	attack_time = attack_duration
 	attack_hit_done = false
+	attack_lunge_done = false
 	return true
 
 func reset_combo() -> void:
@@ -177,7 +183,7 @@ func get_attack_damage() -> float:
 		return 0.0
 	if attack_kind == 0:
 		return [8.0, 10.0, 15.0][maxi(combo_stage - 1, 0)] * (1.0 + overdrive * 0.0015) * [1.0, 0.92, 1.18][style_id]
-	return ATTACK_DAMAGE[attack_kind] * (1.12 if overdrive >= 70.0 else 1.0) * [1.0, 0.92, 1.22][style_id]
+	return ATTACK_DAMAGE[attack_kind] * (1.12 if enhanced_special else 1.0) * [1.0, 0.92, 1.22][style_id]
 
 func get_attack_range() -> float:
 	if attack_kind < 0:
@@ -216,188 +222,123 @@ func trigger_stun(duration: float) -> void:
 	reset_combo()
 
 func _build_collision() -> void:
+	var old_shape := get_node_or_null("CollisionShape3D")
+	if old_shape:
+		old_shape.queue_free()
 	var shape_node := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = 0.42
-	capsule.height = 1.75
+	capsule.height = 1.85
 	shape_node.shape = capsule
-	shape_node.position.y = 0.90
+	shape_node.position.y = 0.95
+	shape_node.name = "CollisionShape3D"
 	add_child(shape_node)
 
 func _build_model() -> void:
-	visual = Node3D.new()
-	visual.name = "Visual"
+	var asset_path: String = RIGGED_ASSETS.get(fighter_name, RIGGED_ASSETS["Rex"])
+	var packed := load(asset_path) as PackedScene
+	if packed == null:
+		push_error("Could not load rigged fighter asset: " + asset_path)
+		return
+
+	visual = packed.instantiate() as Node3D
+	if visual == null:
+		push_error("Rigged fighter asset did not instantiate as Node3D: " + asset_path)
+		return
+
+	visual.name = "RiggedHumanoid"
 	add_child(visual)
 
-	var dark := _material(Color("#101622"), 0.65, 0.30)
-	var dark2 := _material(Color("#253148"), 0.55, 0.25)
-	var accent_mat := _material(accent, 0.20, 0.25, accent, 2.5)
-	var secondary_mat := _material(secondary, 0.18, 0.28, secondary, 1.8)
-	var skin := _material(Color("#B7775B") if fighter_name == "Rex" else Color("#D28A69"), 0.05, 0.50)
-	var visor := _material(Color("#E8FAFF"), 0.10, 0.10, accent, 3.0)
-	var hair := _material(Color("#0C1220") if fighter_name == "Rex" else Color("#2A1734"), 0.10, 0.42)
+	animation_player = _find_animation_player(visual)
+	if animation_player == null:
+		push_error("No AnimationPlayer found in rigged fighter asset: " + asset_path)
+		return
 
-	body_core = Node3D.new()
-	body_core.name = "BodyCore"
-	visual.add_child(body_core)
+	_configure_animations()
+	_play_animation("Idle")
 
-	_add_box(body_core, "FootL", Vector3(-0.18, 0.10, 0.14), Vector3(0.30, 0.16, 0.52), secondary_mat)
-	_add_box(body_core, "FootR", Vector3(0.18, 0.10, 0.14), Vector3(0.30, 0.16, 0.52), secondary_mat)
-	leg_l = _add_limb(body_core, "LegL", Vector3(-0.18, 0.43, 0), 0.13, 0.63, dark)
-	leg_r = _add_limb(body_core, "LegR", Vector3(0.18, 0.43, 0), 0.13, 0.63, dark)
-	_add_box(body_core, "KneeL", Vector3(-0.18, 0.73, 0.04), Vector3(0.32, 0.18, 0.32), secondary_mat)
-	_add_box(body_core, "KneeR", Vector3(0.18, 0.73, 0.04), Vector3(0.32, 0.18, 0.32), secondary_mat)
-	_add_box(body_core, "Torso", Vector3(0, 1.25, 0), Vector3(0.82, 0.82, 0.50), dark)
-	_add_box(body_core, "Chest", Vector3(0, 1.42, 0.27), Vector3(0.58, 0.34, 0.10), accent_mat)
-	_add_box(body_core, "Core", Vector3(0, 1.30, 0.33), Vector3(0.25, 0.15, 0.07), visor)
-	_add_box(body_core, "Waist", Vector3(0, 0.95, 0.25), Vector3(0.72, 0.12, 0.10), secondary_mat)
-	_add_box(body_core, "BeltFront", Vector3(0, 1.00, 0.34), Vector3(0.64, 0.11, 0.06), accent_mat)
-	_add_box(body_core, "ChestLeft", Vector3(-0.24, 1.50, 0.30), Vector3(0.24, 0.28, 0.09), secondary_mat, Vector3(0, -10, -4))
-	_add_box(body_core, "ChestRight", Vector3(0.24, 1.50, 0.30), Vector3(0.24, 0.28, 0.09), secondary_mat, Vector3(0, 10, 4))
+func _find_animation_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node as AnimationPlayer
+	for child in node.get_children():
+		var found := _find_animation_player(child)
+		if found != null:
+			return found
+	return null
 
-	_add_sphere(body_core, "ShoulderL", Vector3(-0.52, 1.52, 0), 0.16, accent_mat)
-	_add_sphere(body_core, "ShoulderR", Vector3(0.52, 1.52, 0), 0.16, accent_mat)
-	arm_l = _add_limb(body_core, "ArmL", Vector3(-0.53, 1.21, 0), 0.12, 0.58, dark2)
-	arm_r = _add_limb(body_core, "ArmR", Vector3(0.53, 1.21, 0), 0.12, 0.58, dark2)
-	_add_box(body_core, "GloveL", Vector3(-0.54, 0.91, 0.05), Vector3(0.24, 0.28, 0.26), accent_mat)
-	_add_box(body_core, "GloveR", Vector3(0.54, 0.91, 0.05), Vector3(0.24, 0.28, 0.26), accent_mat)
-	_add_box(body_core, "ForearmL", Vector3(-0.54, 1.05, 0.11), Vector3(0.18, 0.24, 0.30), secondary_mat, Vector3(0, 0, -10))
-	_add_box(body_core, "ForearmR", Vector3(0.54, 1.05, 0.11), Vector3(0.18, 0.24, 0.30), secondary_mat, Vector3(0, 0, 10))
-	_add_box(body_core, "ShinL", Vector3(-0.18, 0.43, 0.10), Vector3(0.18, 0.42, 0.08), secondary_mat)
-	_add_box(body_core, "ShinR", Vector3(0.18, 0.43, 0.10), Vector3(0.18, 0.42, 0.08), secondary_mat)
+func _configure_animations() -> void:
+	if animation_player == null:
+		return
+	var library_names := animation_player.get_animation_library_list()
+	for library_name in library_names:
+		var library := animation_player.get_animation_library(library_name)
+		for animation_name in library.get_animation_list():
+			var animation := library.get_animation(animation_name)
+			animation.loop_mode = Animation.LOOP_NONE
+	for loop_name in ["Idle", "Walk", "Block"]:
+		var animation := _get_animation(loop_name)
+		if animation != null:
+			animation.loop_mode = Animation.LOOP_LINEAR
 
-	_add_cylinder(body_core, "Neck", Vector3(0, 1.73, 0), 0.12, 0.16, skin)
-	head = Node3D.new()
-	head.name = "Head"
-	head.position = Vector3(0, 1.99, 0)
-	body_core.add_child(head)
-	_add_sphere(head, "HeadMesh", Vector3.ZERO, 0.28, skin)
-	_add_box(head, "Helmet", Vector3(0, 0.13, -0.02), Vector3(0.46, 0.18, 0.40), hair)
-	_add_box(head, "Visor", Vector3(0, 0.01, 0.25), Vector3(0.40, 0.10, 0.04), visor)
+func _get_animation(name_value: String) -> Animation:
+	if animation_player == null:
+		return null
+	for library_name in animation_player.get_animation_library_list():
+		var library := animation_player.get_animation_library(library_name)
+		if library.has_animation(name_value):
+			return library.get_animation(name_value)
+	return null
 
-	if fighter_name == "Rex":
-		_add_box(body_core, "BackUnit", Vector3(0, 1.50, -0.33), Vector3(0.16, 0.55, 0.10), secondary_mat, Vector3(-12, 0, 0))
-		_add_box(body_core, "ShoulderMark", Vector3(0.63, 1.52, 0), Vector3(0.11, 0.32, 0.18), secondary_mat)
-	else:
-		_add_box(body_core, "HairBand", Vector3(0, 1.98, -0.24), Vector3(0.62, 0.12, 0.08), hair)
-		_add_box(body_core, "Sash", Vector3(0, 1.08, 0.31), Vector3(0.58, 0.06, 0.08), accent_mat)
-		_add_box(body_core, "HipGuardL", Vector3(-0.30, 0.92, 0.17), Vector3(0.14, 0.30, 0.20), secondary_mat, Vector3(0, 0, -12))
-		_add_box(body_core, "HipGuardR", Vector3(0.30, 0.92, 0.17), Vector3(0.14, 0.30, 0.20), secondary_mat, Vector3(0, 0, 12))
+func _play_animation(name_value: String) -> void:
+	if animation_player == null:
+		return
+	if _get_animation(name_value) == null:
+		name_value = "Idle" if _get_animation("Idle") != null else animation_player.current_animation
+	if name_value == "" or name_value == current_animation:
+		return
+	current_animation = name_value
+	animation_player.play(name_value, 0.08)
+
+func _desired_animation() -> String:
+	if knocked_out:
+		return "KO"
+	if blocking:
+		return "Block"
+	if stun_time > 0.0:
+		return "Hit"
+	if is_attacking():
+		if attack_kind == 0:
+			return ["Light1", "Light2", "Light3"][clampi(combo_stage - 1, 0, 2)]
+		if attack_kind == 1:
+			return "Heavy"
+		return "Special"
+	if move_amount > 0.10:
+		return "Walk"
+	return "Idle"
+
+func _apply_attack_motion() -> void:
+	if not is_attacking() or attack_lunge_done:
+		return
+	var progress := 1.0 - attack_time / attack_duration
+	if progress < 0.28:
+		var lunge: float = LUNGE_DISTANCE[attack_kind]
+		var direction := -global_transform.basis.z.normalized()
+		global_position += direction * (lunge * 0.34)
+		attack_lunge_done = true
 
 func _animate(_delta: float) -> void:
 	if visual == null:
 		return
 
-	var t := Time.get_ticks_msec() * 0.004
-	visual.position.y = sin(t) * 0.025
-	visual.rotation.z = 0.0
-	body_core.rotation = Vector3.ZERO
-	body_core.scale = Vector3.ONE
+	var desired := _desired_animation()
+	_play_animation(desired)
 
-	if knocked_out:
-		body_core.rotation.z = -1.15
-		visual.position.y = -0.18
-		return
+	var pulse := 1.0
+	if hit_flash > 0.0 and not knocked_out:
+		pulse += sin((hit_flash / 0.14) * PI) * 0.06
+	visual.scale = Vector3.ONE * pulse
 
-	if blocking:
-		arm_l.rotation.z = 0.65
-		arm_r.rotation.z = -0.65
-		body_core.scale = Vector3(0.96, 1.02, 0.96)
-	elif is_attacking():
-		var progress := clampf(1.0 - attack_time / attack_duration, 0.0, 1.0)
-		var swing := sin(progress * PI)
-		if attack_kind == 0:
-			arm_r.rotation.z = -1.20 * swing
-			arm_r.rotation.x = -0.45 * swing
-		elif attack_kind == 1:
-			arm_r.rotation.z = -1.55 * swing
-			arm_r.rotation.x = -0.80 * swing
-			body_core.rotation.z = -0.06 * swing
-		else:
-			arm_l.rotation.z = 1.20 * swing
-			arm_r.rotation.z = -1.20 * swing
-			body_core.rotation.z = -0.10 * swing
-			body_core.scale = Vector3.ONE * (1.0 + (0.11 if style_id == 2 else 0.06) * swing)
-	elif stun_time > 0.0:
-		var recoil := sin(stun_time * 24.0) * 0.10
-		body_core.rotation.x = recoil
-		arm_l.rotation.z = 0.95
-		arm_r.rotation.z = -0.95
-		leg_l.rotation.x = -0.10
-		leg_r.rotation.x = 0.12
-	elif move_amount > 0.1:
-		var step := sin(t * (3.8 if style_id == 1 else 3.0)) * 0.12
-		leg_l.rotation.x = step
-		leg_r.rotation.x = -step
-		arm_l.rotation.x = -step * 0.7
-		arm_r.rotation.x = step * 0.7
-	else:
-		var bounce := sin(stance_phase * (1.35 if style_id == 1 else 1.0)) * 0.035
-		body_core.position.y = bounce
-		body_core.rotation.x = -0.035
-		arm_l.rotation.z = 0.28 + sin(stance_phase) * 0.05
-		arm_r.rotation.z = -0.42 - sin(stance_phase) * 0.05
-		arm_l.rotation.x = -0.18
-		arm_r.rotation.x = -0.28
-		leg_l.rotation.x = -0.04
-		leg_r.rotation.x = 0.05
-
-func _material(color: Color, metallic: float, roughness: float, emission_color: Color = Color.WHITE, emission_energy: float = 0.0) -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = color
-	material.metallic = metallic
-	material.roughness = roughness
-	if emission_energy > 0.0:
-		material.emission_enabled = true
-		material.emission = emission_color
-		material.emission_energy_multiplier = emission_energy
-	return material
-
-func _add_box(parent: Node3D, node_name: String, pos: Vector3, size: Vector3, material: Material, rot := Vector3.ZERO) -> MeshInstance3D:
-	var mesh := BoxMesh.new()
-	mesh.size = size
-	var node := MeshInstance3D.new()
-	node.name = node_name
-	node.mesh = mesh
-	node.material_override = material
-	node.position = pos
-	node.rotation_degrees = rot
-	parent.add_child(node)
-	return node
-
-func _add_limb(parent: Node3D, node_name: String, pos: Vector3, radius: float, height: float, material: Material) -> Node3D:
-	var node := Node3D.new()
-	node.name = node_name
-	node.position = pos
-	parent.add_child(node)
-	_add_box(node, "Segment", Vector3.ZERO, Vector3(radius * 2.0, height, radius * 2.0), material)
-	return node
-
-func _add_sphere(parent: Node3D, node_name: String, pos: Vector3, radius: float, material: Material) -> MeshInstance3D:
-	var mesh := SphereMesh.new()
-	mesh.radius = radius
-	mesh.height = radius * 2.0
-	mesh.radial_segments = 18
-	mesh.rings = 10
-	var node := MeshInstance3D.new()
-	node.name = node_name
-	node.mesh = mesh
-	node.material_override = material
-	node.position = pos
-	parent.add_child(node)
-	return node
-
-func _add_cylinder(parent: Node3D, node_name: String, pos: Vector3, radius: float, height: float, material: Material) -> MeshInstance3D:
-	var mesh := CylinderMesh.new()
-	mesh.top_radius = radius
-	mesh.bottom_radius = radius
-	mesh.height = height
-	mesh.radial_segments = 18
-	var node := MeshInstance3D.new()
-	node.name = node_name
-	node.mesh = mesh
-	node.material_override = material
-	node.position = pos
-	parent.add_child(node)
-	return node
+	# Keep generated GLBs visually locked to the arena ground while allowing
+	# the skeletal animation to provide all pose changes.
+	if not knocked_out:
+		visual.position.y = 0.0

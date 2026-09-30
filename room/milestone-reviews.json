@@ -1,0 +1,27 @@
+{
+  "schema":"game-room.milestone-reviews.v1",
+  "room_id":"neon-district-v2",
+  "function":{
+    "status":"approved_by_user_2026-09-30",
+    "paid_meshy_work_allowed":false,
+    "checks":{
+      "purpose_declared":true,
+      "runtime_surface_declared":true,
+      "bounds_declared":true,
+      "hero_reserved":true,
+      "circulation_declared":true,
+      "production_camera_declared":true,
+      "performance_budget_declared":true,
+      "paid_service_budget_declared":true,
+      "symmetry_declared":true,
+      "opening_exception_documented":true,
+      "procedural_first_policy":true
+    }
+  },
+  "form":{
+    "status":"in_progress"
+  },
+  "runtime":{
+    "status":"blocked_until_form_approval"
+  }
+}

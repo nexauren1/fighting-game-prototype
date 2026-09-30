@@ -1,0 +1,91 @@
+{
+  "schema":"game-room.props.v1",
+  "room_id":"neon-district-v2",
+  "generation_policy":"procedural-first",
+  "assets":[
+    {
+      "id":"combat_deck",
+      "role":"primary gameplay substrate",
+      "class":"procedural",
+      "dimensions_m":[20.5,0.28,8.7],
+      "attachment_face":"floor-bottom",
+      "semantic_front":"up",
+      "target_polycount":12,
+      "instances":1,
+      "interactive":false,
+      "mesh_generation_required":false,
+      "rejection_criteria":["not sealed","surface mismatch with active combat bounds"]
+    },
+    {
+      "id":"neon_edge_set",
+      "role":"boundary readability",
+      "class":"procedural",
+      "dimensions_m":[20.0,0.16,0.12],
+      "attachment_face":"floor-bottom",
+      "semantic_front":"up",
+      "target_polycount":48,
+      "instances":4,
+      "interactive":false,
+      "mesh_generation_required":false,
+      "rejection_criteria":["boundary cannot be read from production camera","overlaps active fighter envelope"]
+    },
+    {
+      "id":"hologram_ring",
+      "role":"secondary rear focal frame",
+      "class":"procedural",
+      "dimensions_m":[7.44,0.24,7.44],
+      "attachment_face":"mount-bracket",
+      "semantic_front":"toward-combat-lane",
+      "target_polycount":1728,
+      "instances":1,
+      "interactive":false,
+      "mesh_generation_required":false,
+      "rejection_criteria":["broken ring","blocks fighters in production camera","reads as traversable opening"]
+    },
+    {
+      "id":"neon_pillar_pair",
+      "role":"stage rhythm and scale cue",
+      "class":"procedural",
+      "dimensions_m":[0.26,2.5,0.26],
+      "attachment_face":"floor-bottom",
+      "semantic_front":"inward",
+      "target_polycount":96,
+      "instances":8,
+      "interactive":false,
+      "mesh_generation_required":false,
+      "rejection_criteria":["floats","clips with combat envelope","destroys bilateral rhythm"]
+    },
+    {
+      "id":"tech_barrier",
+      "role":"non-traversable perimeter dressing",
+      "class":"procedural",
+      "dimensions_m":[2.6,0.64,0.70],
+      "attachment_face":"floor-bottom",
+      "semantic_front":"inward",
+      "target_polycount":36,
+      "instances":2,
+      "interactive":false,
+      "mesh_generation_required":false,
+      "rejection_criteria":["intrudes into active combat bounds","creates accidental cover","clips through deck"]
+    },
+    {
+      "id":"city_billboard_frame",
+      "role":"background scale and silhouette",
+      "class":"procedural",
+      "dimensions_m":[2.5,5.0,0.22],
+      "attachment_face":"floor-bottom",
+      "semantic_front":"toward-camera",
+      "target_polycount":48,
+      "instances":2,
+      "interactive":false,
+      "mesh_generation_required":false,
+      "rejection_criteria":["foreground competition with fighter pair","unreadable support"]
+    }
+  ],
+  "future_meshy_asset":{
+    "id":"hero_hologram_emblem",
+    "status":"deferred",
+    "reason":"Not required for the first functional build; no paid generation before explicit Function approval.",
+    "image_prompt":"isolated futuristic holographic combat emblem, full uncropped silhouette, readable depth and support frame, dark brushed metal core with cyan/violet emissive elements, neutral studio lighting, plain background, symmetrical construction, no room, no people, no text, no watermark, no floating pieces, no fused background"
+  }
+}
