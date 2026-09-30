@@ -128,6 +128,7 @@ func _setup_world() -> void:
 	arena = ArenaScript.new()
 	add_child(arena)
 	arena.build()
+	_add_city_backdrop()
 
 	camera = Camera3D.new()
 	camera.fov = 48.0
@@ -359,8 +360,9 @@ func _setup_hud() -> void:
 	root.add_child(top_left)
 	root.add_child(top_right)
 
-	player_portrait = _portrait(root, "res://art/rex.svg", Vector2(38, 34))
-	cpu_portrait = _portrait(root, "res://art/zara.svg", Vector2(1154, 34))
+	var player_is_rex := selected_player == 0
+	player_portrait = _portrait(root, "res://art/rex.svg" if player_is_rex else "res://art/zara.svg", Vector2(38, 34))
+	cpu_portrait = _portrait(root, "res://art/zara.svg" if player_is_rex else "res://art/rex.svg", Vector2(1154, 34))
 	root.add_child(player_portrait)
 	root.add_child(cpu_portrait)
 
@@ -386,12 +388,16 @@ func _setup_hud() -> void:
 	combo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(combo_label)
 
+	combo_stat_label = _label("OVERDRIVE 0% • CHARGE", Vector2(430, 240), Vector2(420, 28), 13, PURPLE)
+	combo_stat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	root.add_child(combo_stat_label)
+
 	announce = _label("READY", Vector2(280, 278), Vector2(720, 84), 36, WHITE)
 	announce.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(announce)
 
 	root.add_child(_label("NEON DISTRICT  •  NEXAR BATTLE ARENA", Vector2(28, 680), Vector2(500, 22), 11, MUTED))
-	root.add_child(_label("WASD / F G H / R / T", Vector2(1070, 680), Vector2(190, 22), 11, MUTED))
+	root.add_child(_label("X / Y / B / A  •  MOVE / ATTACK / BLOCK", Vector2(920, 680), Vector2(330, 22), 11, MUTED))
 
 func _portrait(parent: Control, path: String, pos: Vector2) -> TextureRect:
 	var portrait := TextureRect.new()
@@ -609,9 +615,10 @@ func _fx_material(albedo: Color, emission: Color, energy: float) -> StandardMate
 func _update_hud() -> void:
 	if not is_instance_valid(player_bar) or not is_instance_valid(cpu_bar):
 		return
-	player_bar.size.x = 360.0 * player.health / player.max_health
-	cpu_bar.size.x = 360.0 * cpu.health / cpu.max_health
-	cpu_bar.position.x = 360.0 - cpu_bar.size.x
+	var bar_width := 330.0
+	player_bar.size.x = bar_width * player.health / player.max_health
+	cpu_bar.size.x = bar_width * cpu.health / cpu.max_health
+	cpu_bar.position.x = 1110.0 + (bar_width - cpu_bar.size.x)
 	if combo_label:
 		combo_label.text = "COMBO  x%d" % combo_hits if combo_hits > 1 and combo_time > 0.0 else ""
 	combo_stat_label.text = "OVERDRIVE %d%% • %s" % [int(player.overdrive), "ENHANCED SPECIAL" if player.overdrive >= 70.0 else "CHARGE"]
