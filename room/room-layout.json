@@ -1,0 +1,47 @@
+{
+  "schema":"game-room.room-layout.v1",
+  "room_id":"neon-district-v2",
+  "projection_unit":"metres",
+  "shell":{
+    "ground":{"center":[0,-0.35,0],"size":[34,0.6,26]},
+    "combat_deck":{"center":[0,0.08,0],"size":[20.5,0.28,8.7]},
+    "combat_surface":{"center":[0,0.25,0],"size":[19.5,0.08,7.9]}
+  },
+  "lower_room_layer":{
+    "features":[
+      {"id":"edge_north","type":"boundary","center":[0,0.45,-4.05],"size":[20.0,0.16,0.12],"material":"pink_emissive"},
+      {"id":"edge_south","type":"boundary","center":[0,0.45,4.05],"size":[20.0,0.16,0.12],"material":"cyan_emissive"},
+      {"id":"edge_west","type":"boundary","center":[-9.85,0.45,0],"size":[0.12,0.16,7.9],"material":"violet_emissive"},
+      {"id":"edge_east","type":"boundary","center":[9.85,0.45,0],"size":[0.12,0.16,7.9],"material":"violet_emissive"},
+      {"id":"hologram_ring","type":"secondary_focal","center":[0,5.0,-5.2],"outer_radius":3.72,"inner_radius":3.60,"rotation_degrees":[90,0,0]},
+      {"id":"nexar_sign","type":"sign","center":[0,7.5,-6.5],"text":"NEXAR"},
+      {"id":"district_sign","type":"sign","center":[0,6.55,-6.5],"text":"NEON DISTRICT"},
+      {"id":"spawn_player","type":"spawn","center":[-3.2,0.30,0]},
+      {"id":"spawn_cpu","type":"spawn","center":[3.2,0.30,0]},
+      {"id":"tech_barrier_a","type":"perimeter_dressing","center":[-6.0,0.58,4.80],"size":[2.6,0.64,0.70]},
+      {"id":"tech_barrier_b","type":"perimeter_dressing","center":[5.0,0.56,-4.80],"size":[3.1,0.58,0.66]}
+    ]
+  },
+  "city_layer":{
+    "layout":"two symmetric rows outside the combat deck",
+    "row_z":[-10.0,10.0],
+    "building_count_per_row":11,
+    "building_heights_m":[5.5,8.0,11.0,7.0,13.0,9.0,6.5,12.0,10.0,7.5]
+  },
+  "reflected_ceiling_layer":{
+    "status":"not_applicable_outdoor_stage",
+    "features":[]
+  },
+  "lighting":{
+    "key_directional":[-52,-30,0],
+    "rear_left":[-7.5,4.0,-3.0],
+    "rear_right":[7.5,4.0,-3.0],
+    "rear_center":[0,5.5,-5.0]
+  },
+  "production_camera":{
+    "position":[0,5.0,13.5],
+    "fov":48.0,
+    "look_target":"runtime midpoint between fighters"
+  },
+  "qa_views":["corner_a","corner_b","corner_c","corner_d","center_up","ceiling_oblique_a","ceiling_oblique_b"]
+}
